@@ -48,6 +48,50 @@ int promotions[1050] = {0,0,0,0,0,448,448,448,448,248,248,248,248,0,0,0,0,968,96
 
 int depth = 0;
 int morale[2] = {0};
+int position_bonus[2] = {};
+
+int nonentropic_minion[8][8] = {
+    {10,30,50,60,60,50,30,10},
+    {20,50,100,120,120,100,50,20},
+    {20,70,90,100,100,90,70,20},
+    {20,40,80,100,100,80,40,20},
+    {20,40,60,100,100,60,40,20},
+    {10,20,40,50,50,40,20,10},
+    {5,10,20,30,30,20,10,5},
+    {0,5,10,20,20,10,5,0}};
+
+int entropic_minion_r[8][8] = {
+    {0,0,0,0,0,0,0,0},
+    {-40,-40,-40,-40,-40,-40,-40,-40},
+    {-100,-100,-100,-100,-100,-100,-100,-100},
+    {-100,-100,-100,-100,-100,-100,-100,-100},
+    {-80,-80,-80,-80,-80,-80,-80,-80},
+    {-60,-60,-60,-60,-60,-60,-60,-60},
+    {-20,-20,-20,-20,-20,-20,-20,-20},
+    {-30,-30,-30,-30,-30,-30,-30,-30},
+};
+
+int entropic_minion_nr[8][8] = {
+    {0,0,0,0,0,0,0,0},
+    {150,150,150,150,150,150,150,150},
+    {80,90,100,100,100,100,90,80},
+    {40,60,70,80,80,70,60,40},
+    {10,30,50,60,60,50,30,10},
+    {-10,10,30,40,40,30,10,-10},
+    {-30,-10,0,10,10,0,-10,-30},
+    {-50,-30,-20,-10,-10,-20,-30,-50}
+};
+
+int champion_bonus[8][8] = {
+    {0,10,30,40,40,30,10,0},
+    {10,20,40,50,50,40,20,10},
+    {20,30,60,80,80,60,30,20},
+    {30,40,80,100,100,80,40,30},
+    {30,40,60,80,80,60,40,30},
+    {20,30,50,60,60,50,30,20},
+    {10,20,40,50,50,40,20,10},
+    {0,10,20,40,40,20,10,0}
+};
 
 const int MAX_DEPTH = 150;
 //int alpha[MDEPTH + 1];
@@ -2923,7 +2967,7 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
                 int ym=1-2*(capturedPiece&1);
                 if(board[xx][yy-ym]==0){
                     summonPiece(xx, yy-ym, capturedPiece);
-                    increaseValue(id_board[xx][yy-ym], 12);
+                    increaseValue(id_board[xx][yy-ym], -12);
                 }
             }
             break;
@@ -2988,12 +3032,11 @@ void swap(int x, int y, int xx, int yy, int pc_id){
     undostack[turn][undo_pnt[turn]][3]=xx;
     undostack[turn][undo_pnt[turn]][4]=yy;
     undo_pnt[turn]++;
-    board[xx][yy]^=board[x][y];
-    board[x][y]^=board[xx][yy];
-    board[xx][yy]^=board[x][y];
-    id_board[xx][yy]^=id_board[x][y];
-    id_board[x][y]^=id_board[xx][yy];
-    id_board[xx][yy]^=id_board[x][y];
+    std::swap(board[xx][yy], board[x][y]);
+    std::swap(id_board[xx][yy], id_board[x][y]);
+    std::swap(px[board[x][y]], px[board[xx][yy]]);
+    moved[pc_id]++;
+    moved[id_board[x][y]]++;
 }
 
 void inflictStatus(int nstatus, int xx, int yy, int pc_id){
@@ -3268,12 +3311,11 @@ void unmakeMoves(int tur){
                 int y = undostack[tur][i][2];
                 int xx = undostack[tur][i][3];
                 int yy = undostack[tur][i][4];
-                board[xx][yy]^=board[x][y];
-                board[x][y]^=board[xx][yy];
-                board[xx][yy]^=board[x][y];
-                id_board[xx][yy]^=id_board[x][y];
-                id_board[x][y]^=id_board[xx][yy];
-                id_board[xx][yy]^=id_board[x][y];
+                std::swap(board[xx][yy], board[x][y]);
+                std::swap(id_board[xx][yy], id_board[x][y]);
+                std::swap(px[board[x][y]], px[board[xx][yy]]);
+                moved[id_board[xx][yy]]++;
+                moved[id_board[x][y]]++;
                 break;
             }
 
@@ -3566,7 +3608,7 @@ int getEncoding(std::string name)
         res = 66;
     else if (name == "NA")
         res = 74;
-    else if (name == "FireBall")
+    else if (name == "Fireball")
         res = 82;
     else if (name == "Frog")
         res = 90;
@@ -3929,12 +3971,9 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         //std::cout<<"UNMAKE"<<std::endl;
         //printState();
     }
-    /*if(best==100){
-        //std::cout<<candidate_pointer[turn]<<std::endl;
-        //for(int i=0; i<pc_cnt; i++)
-        //    std::cout<<pieces[i]<<" "<<death[i]<<std::endl;
-        //printState();
-    }*/
+    if(best==100){
+        printState();
+    }
     return best;
 }
 
@@ -3944,21 +3983,25 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 int main()
 {
     init();
-    //loadPosition("56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28");
-    loadPosition("56,Usernametaken12#5978,loading,3000,0,v56_replay,152,20,14,7,7,7,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Rook,Pawn,,,,,Pawn,Rook,Knight,Pawn,,,,,Pawn,Knight,Bishop,Pawn,,,,,Pawn,Bishop,King,Pawn,,,,,Pawn,Queen,Queen,Pawn,,,,,Pawn,King,Bishop,Pawn,,,,,Pawn,Bishop,Knight,Pawn,,,,,Pawn,Knight,Rook,Pawn,,,,,Pawn,Rook,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,50,34");
+   // loadPosition("56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28");
+    //loadPosition("56,Usernametaken12#5978,loading,3000,0,v56_replay,152,20,14,7,7,7,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Rook,Pawn,,,,,Pawn,Rook,Knight,Pawn,,,,,Pawn,Knight,Bishop,Pawn,,,,,Pawn,Bishop,King,Pawn,,,,,Pawn,Queen,Queen,Pawn,,,,,Pawn,King,Bishop,Pawn,,,,,Pawn,Bishop,Knight,Pawn,,,,,Pawn,Knight,Rook,Pawn,,,,,Pawn,Rook,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,50,34");
+    loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,114,18,38,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Greed4,Bomber,,,,,Drake,Queen,Banshee4,Fireball2,,,,,Drake,HauntedArmor,SoulKeeper4,Fireball3,,,,,Drake,Wizard,King,Fireball2,,,,,Drake,Knight,Enchantress4,Fireball2,,,,,Drake,Knight,SoulKeeper4,Fireball3,,,,,Drake,Dragon,Banshee4,Fireball2,,,,,Militia,King,Greed4,Bomber,,,,,Militia,Dryad,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,44,5,21");
     /*for(int i=0; i<pc_cnt; i++)
         generateMoves(i, px[i], py[i]);
-    //printCandidateMoves();
+    printCandidateMoves();
     //makeMove(0, 2, 2, 1);
+    printState();
     while(true){
         int xx, yy, id, mt;
         std::cin>>xx>>yy>>id>>mt;
         makeMove(xx, yy, id, mt);
         printState();
+        unmakeMoves(turn);
+        printState();
     }*/
     //std::cout<<pc_cnt<<std::endl;
     auto start = std::chrono::system_clock::now();
-    std::cout<<"evaluation: "<<evaluate(-1, -1, 6, 0)<<std::endl;
+    std::cout<<"evaluation: "<<evaluate(-1, -1, 5, 0)<<std::endl;
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
