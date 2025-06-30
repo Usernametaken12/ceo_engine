@@ -743,6 +743,7 @@ void generateMoves(int pc_id, int x, int y)
     case 96:
         militia(1, 14, piece, pc_id, x, y);
         bishopForward(2, 1, piece, pc_id, x, y, 2);
+        break;
     case 98: // frostmage
         rook(2, 1, piece, pc_id, x, y);
         valk(15, piece, pc_id, x, y);
@@ -3034,8 +3035,9 @@ void swap(int x, int y, int xx, int yy, int pc_id){
     undo_pnt[turn]++;
     std::swap(board[xx][yy], board[x][y]);
     std::swap(id_board[xx][yy], id_board[x][y]);
-    std::swap(px[board[x][y]], px[board[xx][yy]]);
-    moved[pc_id]++;
+    std::swap(px[id_board[x][y]], px[id_board[xx][yy]]);
+    std::swap(py[id_board[x][y]], py[id_board[xx][yy]]);
+    moved[id_board[xx][yy]]++;
     moved[id_board[x][y]]++;
 }
 
@@ -3161,7 +3163,7 @@ void cureUnit(int xx, int yy, int pc_id){
 
 //uses the refined list of 31 moves -> 10 or so operations
 void makeMove(int xx, int yy, int pc_id, int moveType){
-    //std::cout<<xx<<" "<<yy<<" "<<pc_id<<" "<<moveType<<std::endl;
+    std::cout<<xx<<" "<<yy<<" "<<pc_id<<" "<<moveType<<std::endl;
     switch(moveType){
         case 1: //move
             moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
@@ -3313,7 +3315,8 @@ void unmakeMoves(int tur){
                 int yy = undostack[tur][i][4];
                 std::swap(board[xx][yy], board[x][y]);
                 std::swap(id_board[xx][yy], id_board[x][y]);
-                std::swap(px[board[x][y]], px[board[xx][yy]]);
+                std::swap(px[id_board[x][y]], px[id_board[xx][yy]]);
+                std::swap(py[id_board[x][y]], py[id_board[xx][yy]]);
                 moved[id_board[xx][yy]]++;
                 moved[id_board[x][y]]++;
                 break;
@@ -3924,6 +3927,10 @@ void printState(){
         }
         std::cout<<std::endl;
     }
+
+    for(int i=0; i<pc_cnt; i++)
+        std::cout<<"("<<px[i]<<", "<<py[i]<<") ";
+    std::cout<<std::endl;
     std::cout<<std::endl;
 }
 
@@ -3939,6 +3946,7 @@ int static_evaluation(int side){
     return morale[0]-morale[1];
 }
 
+int print_cnt=0;
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
     if (morale[0] == 0)
@@ -3959,7 +3967,8 @@ int evaluate(int alpha, int beta, int mdepth, int side)
     for(int i=0; i<candidate_pointer[turn]; i++){
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);
-        //printState();
+        if(print_cnt++<100000)
+            printState();
         ++turn;
         int res = evaluate(-1, -1, mdepth-1, side^1);
         if(!side)
@@ -3968,12 +3977,14 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             best = std::min(best, res);
         --turn;
         unmakeMoves(turn);
-        //std::cout<<"UNMAKE"<<std::endl;
-        //printState();
+        if(print_cnt++<100000){
+            std::cout<<"UNMAKE"<<std::endl;
+            printState();
+        }
     }
-    if(best==100){
-        printState();
-    }
+    //if(best==100){
+    //    printState();
+    //}
     return best;
 }
 
@@ -4001,7 +4012,7 @@ int main()
     }*/
     //std::cout<<pc_cnt<<std::endl;
     auto start = std::chrono::system_clock::now();
-    std::cout<<"evaluation: "<<evaluate(-1, -1, 5, 0)<<std::endl;
+    std::cout<<"evaluation: "<<evaluate(-1, -1, 4, 0)<<std::endl;
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
