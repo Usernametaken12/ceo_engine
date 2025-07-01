@@ -498,7 +498,7 @@ void queen(int range, int moveType, int piece, int pc_id, int x, int y, int star
     bishop(range, moveType, piece, pc_id, x, y, start);
 }
 
-int knight_directions[8][2] = {{1, 2}, {2, 1}, {-1, 2}, {-2, 1}, {-1, -2}, {2, -1}, {1, -2}, {-2, -1}};
+int knight_directions[8][2] = {{1, 2}, {-1, 2}, {-2, 1}, {2, 1}, {-2, -1}, {2, -1}, {-1, -2}, {1, -2}};
 
 void knight(int moveType, int piece, int pc_id, int x, int y)
 {
@@ -525,6 +525,7 @@ void knightForward(int moveType, int piece, int pc_id, int x, int y)
     if (piece & 1 == 1)
     {
         knightBackward(moveType, piece - 1, pc_id, x, y);
+        return;
     }
     for (int i = 0; i < 4; i++)
     {
@@ -538,6 +539,7 @@ void knightBackward(int moveType, int piece, int pc_id, int x, int y)
     if (piece & 1 == 1)
     {
         knightForward(moveType, piece - 1, pc_id, x, y);
+        return;
     }
     for (int i = 4; i < 8; i++)
     {
@@ -546,13 +548,121 @@ void knightBackward(int moveType, int piece, int pc_id, int x, int y)
     }
 }
 
-int valk_directions[8][2] = {{1, 3}, {3, 1}, {-1, 3}, {3, -1}, {1, -3}, {-3, 1}, {-1, -3}, {-3, -1}};
+void knightHorizontal(int moveType, int piece, int pc_id, int x, int y){
+    for (int i = 2; i < 6; i++)
+        if (x + knight_directions[i][0] >= 0 && x + knight_directions[i][0] <= 7 && y + knight_directions[i][1] >= 0 && y + knight_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + knight_directions[i][0], y + knight_directions[i][1], piece, pc_id, moveType);
+}
+
+int valk_directions[8][2] = {{1, 3}, {-1, 3}, {1, -3}, {-1, -3}, {-3, -1}, {3, 1}, {3, -1}, {-3, 1}};
 void valk(int moveType, int piece, int pc_id, int x, int y)
 {
     for (int i = 0; i < 8; i++)
     {
         if (x + valk_directions[i][0] >= 0 && x + valk_directions[i][0] <= 7 && y + valk_directions[i][1] >= 0 && y + valk_directions[i][1] <= 7)
             addCandidateMove(x, y, x + valk_directions[i][0], y + valk_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void valkVertical(int moveType, int piece, int pc_id, int x, int y){
+    for (int i = 0; i < 4; i++)
+    {
+        if (x + valk_directions[i][0] >= 0 && x + valk_directions[i][0] <= 7 && y + valk_directions[i][1] >= 0 && y + valk_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + valk_directions[i][0], y + valk_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void valkHorizontal(int moveType, int piece, int pc_id, int x, int y){
+    for (int i = 4; i < 8; i++)
+    {
+        if (x + valk_directions[i][0] >= 0 && x + valk_directions[i][0] <= 7 && y + valk_directions[i][1] >= 0 && y + valk_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + valk_directions[i][0], y + valk_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+int mancer_directions[8][2] = {{2, 3}, {-2, 3}, {3, 2}, {-3, 2}, {3, -2}, {-3, -2}, {2, -3}, {-2, -3}};
+void mancer(int moveType, int piece, int pc_id, int x, int y){
+    for (int i = 0; i < 8; i++)
+    {
+        if (x + mancer_directions[i][0] >= 0 && x + mancer_directions[i][0] <= 7 && y + mancer_directions[i][1] >= 0 && y + mancer_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + mancer_directions[i][0], y + mancer_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void mancerOnlyBackward(int moveType, int piece, int pc_id, int x, int y);
+
+void mancerOnlyForward(int moveType, int piece, int pc_id, int x, int y){
+    if(moveType&1==1)
+        return mancerOnlyBackward(moveType, piece-1, pc_id, x, y);
+    for (int i = 0; i < 2; i++)
+    {
+        if (x + mancer_directions[i][0] >= 0 && x + mancer_directions[i][0] <= 7 && y + mancer_directions[i][1] >= 0 && y + mancer_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + mancer_directions[i][0], y + mancer_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void mancerOnlyBackward(int moveType, int piece, int pc_id, int x, int y){
+    if(moveType&1==1)
+        return mancerOnlyForward(moveType, piece-1, pc_id, x, y);
+    for (int i = 6; i < 8; i++)
+    {
+        if (x + mancer_directions[i][0] >= 0 && x + mancer_directions[i][0] <= 7 && y + mancer_directions[i][1] >= 0 && y + mancer_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + mancer_directions[i][0], y + mancer_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void mancerBackward(int moveType, int piece, int pc_id, int x, int y);
+
+void mancerForward(int moveType, int piece, int pc_id, int x, int y){
+    if(moveType&1==1)
+        return mancerBackward(moveType, piece-1, pc_id, x, y);
+    for (int i = 0; i < 4; i++)
+    {
+        if (x + mancer_directions[i][0] >= 0 && x + mancer_directions[i][0] <= 7 && y + mancer_directions[i][1] >= 0 && y + mancer_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + mancer_directions[i][0], y + mancer_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void mancerBackward(int moveType, int piece, int pc_id, int x, int y){
+    if(moveType&1==1)
+        return mancerForward(moveType, piece-1, pc_id, x, y);
+    for (int i = 4; i < 8; i++)
+    {
+        if (x + mancer_directions[i][0] >= 0 && x + mancer_directions[i][0] <= 7 && y + mancer_directions[i][1] >= 0 && y + mancer_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + mancer_directions[i][0], y + mancer_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void mancerHorizonal(int moveType, int piece, int pc_id, int x, int y){
+    for (int i = 2; i < 6; i++)
+    {
+        if (x + mancer_directions[i][0] >= 0 && x + mancer_directions[i][0] <= 7 && y + mancer_directions[i][1] >= 0 && y + mancer_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + mancer_directions[i][0], y + mancer_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void bomberBackward(int range, int moveType, int piece, int pc_id, int x, int y);
+void bomberForward(int range, int moveType, int piece, int pc_id, int x, int y){
+    if(piece&1)
+        return bomberBackward(range, moveType, piece-1, pc_id, x, y);
+    if(y!=0)
+        return;
+    for(int i=-range; i<=range; i++){
+        if(i==0)
+            continue;
+        addCandidateMove(x, y, x+i, 7, piece, pc_id, moveType);
+    }
+}
+
+void bomberBackward(int range, int moveType, int piece, int pc_id, int x, int y){
+    if(piece&1)
+        return bomberForward(range, moveType, piece-1, pc_id, x, y);
+    if(y!=7)
+        return;
+    for(int i=-range; i<=range; i++){
+        if(i==0)
+            continue;
+        addCandidateMove(x, y, x+i, 0, piece, pc_id, moveType);
     }
 }
 
@@ -580,12 +690,27 @@ void generateMoves(int pc_id, int x, int y)
         queen(2, 13, piece, pc_id, x, y, 2);
         break;
     case 10: // archer
+        bishopForward(1, 1, piece, pc_id, x, y);
+        bishopForward(2, 2, piece, pc_id, x, y, 2);
+        rookBackward(1, 1, piece, pc_id, x, y);
+        rookForward(2, 5, piece, pc_id, x, y, 2);
         break;
     case 12:
+        bishopForward(2, 1, piece, pc_id, x, y);
+        rookBackward(1, 1, piece, pc_id, x, y);
+        rookForward(2, 5, piece, pc_id, x, y, 2);
         break;
     case 14:
+        bishopForward(2, 1, piece, pc_id, x, y);
+        rookBackward(1, 1, piece, pc_id, x, y);
+        rookForward(2, 5, piece, pc_id, x, y, 2);
+        mancerOnlyForward(44, piece, pc_id, x, y);
         break;
     case 16:
+        bishopForward(2, 1, piece, pc_id, x, y);
+        rookBackward(1, 1, piece, pc_id, x, y);
+        rookForward(2, 5, piece, pc_id, x, y, 2);
+        mancerForward(9, piece, pc_id, x, y);
         break;
     case 18: // axman
         rookForward(1, 1, piece, pc_id, x, y);
@@ -632,12 +757,30 @@ void generateMoves(int pc_id, int x, int y)
         knight(9, piece, pc_id, x, y);
         break;
     case 34: // bat
+        rookHorizontal(1, 1, piece, pc_id, x, y);
+        knightHorizontal(9, piece, pc_id, x, y);
+        rookBackward(1, 4, piece, pc_id, x, y);
         break;
     case 36:
+        rookHorizontal(1, 1, piece, pc_id, x, y);
+        knightHorizontal(9, piece, pc_id, x, y);
+        mancerHorizonal(9, piece, pc_id, x, y);
+        rookBackward(1, 4, piece, pc_id, x, y);
         break;
     case 38:
+        rookHorizontal(1, 1, piece, pc_id, x, y);
+        knightHorizontal(9, piece, pc_id, x, y);
+        mancerHorizonal(9, piece, pc_id, x, y);
+        rookBackward(1, 4, piece, pc_id, x, y);
+        valkVertical(9, piece, pc_id, x, y);
         break;
     case 40:
+        rookHorizontal(1, 1, piece, pc_id, x, y);
+        knightHorizontal(9, piece, pc_id, x, y);
+        mancerHorizonal(9, piece, pc_id, x, y);
+        rookBackward(1, 4, piece, pc_id, x, y);
+        valkVertical(9, piece, pc_id, x, y);
+        rook(7, 1, piece, pc_id, x, y, 5);
         break;
     case 42: // bishop
         bishop(7, 3, piece, pc_id, x, y);
@@ -656,12 +799,25 @@ void generateMoves(int pc_id, int x, int y)
         valk(9, piece, pc_id, x, y);
         break;
     case 50: // bomber
+        rookForward(1, 3, piece, pc_id, x, y);
+        bomberBackward(1, 9, piece, pc_id, x, y);
         break;
     case 52:
+        rookForward(1, 3, piece, pc_id, x, y);
+        bishopForward(1, 1, piece, pc_id, x, y);
+        bomberBackward(2, 9, piece, pc_id, x, y);
         break;
     case 54:
+        rookForward(1, 3, piece, pc_id, x, y);
+        rookForward(2, 1, piece, pc_id, x, y, 2);
+        bishopForward(1, 1, piece, pc_id, x, y);
+        bomberBackward(3, 9, piece, pc_id, x, y);
         break;
     case 56:
+        rookForward(1, 3, piece, pc_id, x, y);
+        rookForward(3, 1, piece, pc_id, x, y, 2);
+        bishopForward(2, 1, piece, pc_id, x, y);
+        bomberBackward(4, 9, piece, pc_id, x, y);
         break;
     case 58: // dryad
         rook(1, 12, piece, pc_id, x, y);
@@ -905,12 +1061,33 @@ void generateMoves(int pc_id, int x, int y)
         bishop(1, 15, piece, pc_id, x, y);
         break;
     case 162: // poisonmage
+        rook(1, 1, piece, pc_id, x, y);
+        bishop(1, 16, piece, pc_id, x, y);
+        rook(2, 16, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        bishop(2, 9, piece, pc_id, x, y, 2);
         break;
     case 164:
+        rook(1, 3, piece, pc_id, x, y);
+        bishop(1, 16, piece, pc_id, x, y);
+        rook(2, 16, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        bishop(2, 9, piece, pc_id, x, y, 2);
         break;
     case 166:
+        rook(1, 13, piece, pc_id, x, y);
+        bishop(1, 16, piece, pc_id, x, y);
+        rook(2, 16, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        bishop(2, 9, piece, pc_id, x, y, 2);
         break;
     case 168:
+        rook(1, 13, piece, pc_id, x, y);
+        bishop(1, 16, piece, pc_id, x, y);
+        rook(2, 16, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        bishop(2, 9, piece, pc_id, x, y, 2);
+        valkHorizontal(16, piece, pc_id, x, y);
         break;
     case 170: // shieldsman
         bishopForward(1, 1, piece, pc_id, x, y);
@@ -1342,12 +1519,30 @@ void generateMoves(int pc_id, int x, int y)
         queen(2, 9, piece, pc_id, x, y, 2);
         break;
     case 362: // Hydromancer
+        mancer(9, piece, pc_id, x, y);
+        rook(2, 4, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        queen(1, 18, piece, pc_id, x, y);
         break;
     case 364:
+        mancer(9, piece, pc_id, x, y);
+        queen(2, 4, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        queen(1, 18, piece, pc_id, x, y);
         break;
     case 366:
+        mancer(9, piece, pc_id, x, y);
+        queen(2, 4, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        valk(9, piece, pc_id, x, y);
+        queen(1, 18, piece, pc_id, x, y);
         break;
     case 368:
+        mancer(9, piece, pc_id, x, y);
+        queen(2, 19, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
+        valk(9, piece, pc_id, x, y);
+        queen(1, 18, piece, pc_id, x, y);
         break;
     case 370: // Legionary
         queen(1, 3, piece, pc_id, x, y);
@@ -1517,12 +1712,29 @@ void generateMoves(int pc_id, int x, int y)
         knight(9, piece, pc_id, x, y);
         break;
     case 450: // Pyromancer
+        mancer(9, piece, pc_id, x, y);
+        queen(1, 46, piece, pc_id, x, y);
+        rook(2, 1, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
         break;
     case 452:
+        mancer(9, piece, pc_id, x, y);
+        queen(1, 46, piece, pc_id, x, y);
+        queen(2, 1, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
         break;
     case 454:
+        mancer(9, piece, pc_id, x, y);
+        queen(1, 46, piece, pc_id, x, y);
+        rook(2, 3, piece, pc_id, x, y, 2);
+        bishop(2, 1, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
         break;
     case 456:
+        mancer(9, piece, pc_id, x, y);
+        queen(1, 46, piece, pc_id, x, y);
+        queen(2, 3, piece, pc_id, x, y, 2);
+        rook(3, 9, piece, pc_id, x, y, 3);
         break;
     case 458: // Ranger
         rook(1, 3, piece, pc_id, x, y);
@@ -1636,12 +1848,29 @@ void generateMoves(int pc_id, int x, int y)
         bishop(1, 1, piece, pc_id, x, y);
         break;
     case 514: // Thundermage
+        rook(1, 3, piece, pc_id, x, y);
+        rook(2, 9, piece, pc_id, x, y, 2);
+        rook(4, 24, piece, pc_id, x, y, 4);
+        bishop(3, 24, piece, pc_id, x, y, 3);
         break;
     case 516:
+        queen(1, 3, piece, pc_id, x, y);
+        rook(2, 9, piece, pc_id, x, y, 2);
+        rook(4, 24, piece, pc_id, x, y, 4);
+        bishop(3, 24, piece, pc_id, x, y, 3);
         break;
     case 518:
+        rook(1, 13, piece, pc_id, x, y);
+        bishop(1, 3, piece, pc_id, x, y);
+        rook(2, 9, piece, pc_id, x, y, 2);
+        rook(5, 24, piece, pc_id, x, y, 4);
+        bishop(3, 24, piece, pc_id, x, y, 3);
         break;
     case 520:
+        queen(1, 13, piece, pc_id, x, y);
+        rook(2, 9, piece, pc_id, x, y, 2);
+        rook(5, 24, piece, pc_id, x, y, 4);
+        bishop(4, 24, piece, pc_id, x, y, 3);
         break;
     case 522: // Toad
         queen(1, 14, piece, pc_id, x, y);
@@ -1752,12 +1981,23 @@ void generateMoves(int pc_id, int x, int y)
         rookHorizontal(7, 19, piece, pc_id, x, y, 3);
         break;
     case 586: // Demon
+        rook(4, 3, piece, pc_id, x, y);
+        knight(9, piece, pc_id, x, y);
         break;
     case 588:
+        rook(4, 3, piece, pc_id, x, y);
+        knight(9, piece, pc_id, x, y);
+        doubleKnight(9, piece, pc_id, x, y);
         break;
     case 590:
+        rook(4, 3, piece, pc_id, x, y);
+        knight(11, piece, pc_id, x, y);
+        doubleKnight(9, piece, pc_id, x, y);
         break;
     case 592:
+        rook(4, 3, piece, pc_id, x, y);
+        knight(13, piece, pc_id, x, y);
+        doubleKnight(10, piece, pc_id, x, y);
         break;
     case 594: // Dragon
         rook(2, 3, piece, pc_id, x, y);
@@ -3181,7 +3421,7 @@ void payMorale(int side, int qnt){
     undo_pnt[turn]++;
 }
 
-//te pc_id HERE is the piece being replaced
+//the pc_id HERE is the piece being replaced
 void replacePiece(int xx, int yy, int pc_id, int nPieceType){
     undostack[turn][undo_pnt[turn]][0]=7;
     undostack[turn][undo_pnt[turn]][1]=pc_id;
@@ -3218,8 +3458,6 @@ void cureUnit(int xx, int yy, int pc_id){
     status[pc_id]>>=32;
     status[pc_id]<<=32; 
 }
-
-
 
 //uses the refined list of 31 moves -> 10 or so operations
 void makeMove(int xx, int yy, int pc_id, int moveType){
