@@ -50,48 +50,65 @@ int depth = 0;
 int morale[2] = {0};
 int position_bonus[2] = {};
 
-int nonentropic_minion[8][8] = {
-    {10,30,50,60,60,50,30,10},
-    {20,50,100,120,120,100,50,20},
-    {20,70,90,100,100,90,70,20},
-    {20,40,80,100,100,80,40,20},
-    {20,40,60,100,100,60,40,20},
-    {10,20,40,50,50,40,20,10},
-    {5,10,20,30,30,20,10,5},
-    {0,5,10,20,20,10,5,0}};
+int piece_type[1050] = {100,1,2,2,3,2,3,2,3,1,1,1,2,3,1,3,1,3,2,2,1,3,1,1,1,2,1,2,1,3,3,3,3,3,3,3,3,1,1,3,3,3,1,3,1,1,3,3,3,3,1,3,1,1,1,3,1,3,3,3,2,1,3,1,1,3,3,3,3,3,1,3,1,0,3,3,3,3,3,3,3,2,3,1,3,3,3,3,3,3,3,1,2,1,3,3,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,3,3,3,3,3,3,3,0,0,0,0};
 
-int entropic_minion_r[8][8] = {
-    {0,0,0,0,0,0,0,0},
-    {-40,-40,-40,-40,-40,-40,-40,-40},
-    {-100,-100,-100,-100,-100,-100,-100,-100},
-    {-100,-100,-100,-100,-100,-100,-100,-100},
-    {-80,-80,-80,-80,-80,-80,-80,-80},
-    {-60,-60,-60,-60,-60,-60,-60,-60},
-    {-20,-20,-20,-20,-20,-20,-20,-20},
-    {-30,-30,-30,-30,-30,-30,-30,-30},
+int piece_square_tables[5][8][8] = {    
+    {
+        {0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0},
+    },  
+    {
+        {10,30,50,60,60,50,30,10},
+        {20,50,100,120,120,100,50,20},
+        {20,70,90,100,100,90,70,20},
+        {20,40,80,100,100,80,40,20},
+        {20,40,60,100,100,60,40,20},
+        {10,20,40,50,50,40,20,10},
+        {5,10,20,30,30,20,10,5},
+        {0,5,10,20,20,10,5,0}
+    },
+
+    {
+        {0,0,0,0,0,0,0,0},
+        {150,150,150,150,150,150,150,150},
+        {80,90,100,100,100,100,90,80},
+        {40,60,70,80,80,70,60,40},
+        {10,30,50,60,60,50,30,10},
+        {-10,10,30,40,40,30,10,-10},
+        {-30,-10,0,10,10,0,-10,-30},
+        {-50,-30,-20,-10,-10,-20,-30,-50}
+    },
+
+    {
+        {0,10,30,40,40,30,10,0},
+        {10,20,40,50,50,40,20,10},
+        {20,30,60,80,80,60,30,20},
+        {30,40,80,100,100,80,40,30},
+        {30,40,60,80,80,60,40,30},
+        {20,30,50,60,60,50,30,20},
+        {10,20,40,50,50,40,20,10},
+        {0,10,20,40,40,20,10,0}
+    },
+
+    {
+        {0,0,0,0,0,0,0,0},
+        {-40,-40,-40,-40,-40,-40,-40,-40},
+        {-100,-100,-100,-100,-100,-100,-100,-100},
+        {-100,-100,-100,-100,-100,-100,-100,-100},
+        {-80,-80,-80,-80,-80,-80,-80,-80},
+        {-60,-60,-60,-60,-60,-60,-60,-60},
+        {-20,-20,-20,-20,-20,-20,-20,-20},
+        {-30,-30,-30,-30,-30,-30,-30,-30},
+    }
 };
 
-int entropic_minion_nr[8][8] = {
-    {0,0,0,0,0,0,0,0},
-    {150,150,150,150,150,150,150,150},
-    {80,90,100,100,100,100,90,80},
-    {40,60,70,80,80,70,60,40},
-    {10,30,50,60,60,50,30,10},
-    {-10,10,30,40,40,30,10,-10},
-    {-30,-10,0,10,10,0,-10,-30},
-    {-50,-30,-20,-10,-10,-20,-30,-50}
-};
 
-int champion_bonus[8][8] = {
-    {0,10,30,40,40,30,10,0},
-    {10,20,40,50,50,40,20,10},
-    {20,30,60,80,80,60,30,20},
-    {30,40,80,100,100,80,40,30},
-    {30,40,60,80,80,60,40,30},
-    {20,30,50,60,60,50,30,20},
-    {10,20,40,50,50,40,20,10},
-    {0,10,20,40,40,20,10,0}
-};
 
 const int MAX_DEPTH = 150;
 //int alpha[MDEPTH + 1];
@@ -2699,6 +2716,13 @@ bool isEnchanted(int pc_id)
     return (status[pc_id] & ((1LL << 38) - (1LL << 32))) > 0;
 }
 
+void addPVT(int pc, int x, int y){
+    position_bonus[pc&1]+=piece_square_tables[piece_type[pc/2]][x][y];
+}
+
+void removePVT(int pc, int x, int y){
+    position_bonus[pc&1]-=piece_square_tables[piece_type[pc/2]][x][y];
+}
 
 /*
 56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28
@@ -2728,6 +2752,12 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id){
         //std::cout<<"PROMOTE"<<std::endl;
     }
     //std::cout<<"move "<<x<<" "<<y<<" "<<xx<<" "<<yy<<" "<<promotions[board[x][y]/2]<<" "<<((pieces[pc_id]&1)==1)<<" "<<(yy==0&&(pieces[pc_id]&1)==1&&promotions[board[x][y]/2]!=0)<<std::endl;
+    
+    if(!death[pc_id]){
+        removePVT(pieces[pc_id], x, y);
+        addPVT(pieces[pc_id], xx, yy);
+    }
+    
     board[xx][yy]=board[x][y];
     id_board[xx][yy]=pc_id;
     board[x][y]=0;
@@ -2735,6 +2765,7 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id){
     moved[pc_id]++;
     px[pc_id]=xx;
     py[pc_id]=yy;
+
     undostack[turn][undo_pnt[turn]][0]=0;
     undostack[turn][undo_pnt[turn]][1]=x;
     undostack[turn][undo_pnt[turn]][2]=y;
@@ -2801,8 +2832,10 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 660:
         case 662:
         case 664:
-            replacePiece(px[pc_id], py[pc_id], pc_id, takingPiece^1);
-            payMorale((takingPiece^1)&1, 1);
+            if(!isMinion[capturedPiece/2]){
+                replacePiece(px[pc_id], py[pc_id], pc_id, takingPiece^1);
+                payMorale((takingPiece^1)&1, 1);
+            }
             break;
         case 666: //minotaur
         case 668:
@@ -3009,6 +3042,9 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     undostack[turn][undo_pnt[turn]][2]=yy;
     undostack[turn][undo_pnt[turn]][3]=id_board[xx][yy];
     undo_pnt[turn]++;
+
+    removePVT(capturedPiece, xx, yy);
+
     morale[capturedPiece&1]-=pmorale[id_board[xx][yy]];
     board[xx][yy]=0;
     death[id_board[xx][yy]]=turn;
@@ -3033,10 +3069,19 @@ void swap(int x, int y, int xx, int yy, int pc_id){
     undostack[turn][undo_pnt[turn]][3]=xx;
     undostack[turn][undo_pnt[turn]][4]=yy;
     undo_pnt[turn]++;
+
+    removePVT(board[x][y], x, y);
+    removePVT(board[xx][yy], xx, yy);
+
     std::swap(board[xx][yy], board[x][y]);
     std::swap(id_board[xx][yy], id_board[x][y]);
+
     std::swap(px[id_board[x][y]], px[id_board[xx][yy]]);
     std::swap(py[id_board[x][y]], py[id_board[xx][yy]]);
+
+    addPVT(board[x][y], x, y);
+    addPVT(board[xx][yy], xx, yy);
+
     moved[id_board[xx][yy]]++;
     moved[id_board[x][y]]++;
 }
@@ -3079,11 +3124,19 @@ void summonPiece(int xx, int yy, int pieceType){
     pieces[pc_cnt]=pieceType;
     id_board[xx][yy]=pc_cnt;
     board[xx][yy]=pieceType;
+
     pmorale[pc_cnt]=pieceValue[pieceType/2];
     morale[pieceType&1]+=pmorale[pc_cnt];
+
     px[pc_cnt]=xx;
     py[pc_cnt]=yy;
     pc_cnt++;
+
+    addPVT(pieceType, xx, yy);
+
+    if(pieceType>=474&&pieceType<482){ //samurai
+        samuraiList[pieceType&1][samuraiPnt[pieceType&1]++]=pc_cnt-1;
+    }
 
     undostack[turn][undo_pnt[turn]][0]=4;
     undostack[turn][undo_pnt[turn]][1]=pc_cnt-1;
@@ -3128,16 +3181,23 @@ void payMorale(int side, int qnt){
     undo_pnt[turn]++;
 }
 
+//te pc_id HERE is the piece being replaced
 void replacePiece(int xx, int yy, int pc_id, int nPieceType){
     undostack[turn][undo_pnt[turn]][0]=7;
     undostack[turn][undo_pnt[turn]][1]=pc_id;
     undostack[turn][undo_pnt[turn]][2]=board[xx][yy];
     undostack[turn][undo_pnt[turn]][3]=pmorale[pc_id];
     undo_pnt[turn]++;
+
+    removePVT(board[xx][yy], xx, yy);
+    addPVT(nPieceType, xx, yy);
+
     morale[pieces[pc_id]&1]-=pmorale[pc_id];
     morale[nPieceType&1]+=pieceValue[nPieceType/2];
+
     board[xx][yy]=nPieceType;
     pmorale[pc_id]=pieceValue[nPieceType/2];
+    pieces[pc_id]=nPieceType;
 }
 
 void increaseValue(int pc_id, int amount){
@@ -3163,7 +3223,7 @@ void cureUnit(int xx, int yy, int pc_id){
 
 //uses the refined list of 31 moves -> 10 or so operations
 void makeMove(int xx, int yy, int pc_id, int moveType){
-    std::cout<<xx<<" "<<yy<<" "<<pc_id<<" "<<moveType<<std::endl;
+    //std::cout<<xx<<" "<<yy<<" "<<pc_id<<" "<<moveType<<std::endl;
     switch(moveType){
         case 1: //move
             moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
@@ -3285,10 +3345,18 @@ void unmakeMoves(int tur){
                 int xx = undostack[tur][i][3];
                 int yy = undostack[tur][i][4];
                 int pc_id = undostack[tur][i][5];
+
+                if(!death[pc_id]){
+                    addPVT(pieces[pc_id], x, y);
+                    removePVT(pieces[pc_id], xx, yy);
+                }
+
                 board[x][y]=board[xx][yy];
                 id_board[x][y]=pc_id;
+
                 board[xx][yy]=0;
                 id_board[xx][yy]=-1;
+
                 moved[pc_id]--;
                 px[pc_id]=x;
                 py[pc_id]=y;
@@ -3300,8 +3368,12 @@ void unmakeMoves(int tur){
                 int xx = undostack[tur][i][1];
                 int yy = undostack[tur][i][2];
                 int pc_id = undostack[tur][i][3];
+
+                addPVT(pieces[pc_id], xx, yy);
+
                 morale[pieces[pc_id]&1]+=pmorale[pc_id];
                 board[xx][yy]=pieces[pc_id];
+
                 death[pc_id]=0;
                 id_board[xx][yy]=pc_id;
                 break;
@@ -3313,12 +3385,21 @@ void unmakeMoves(int tur){
                 int y = undostack[tur][i][2];
                 int xx = undostack[tur][i][3];
                 int yy = undostack[tur][i][4];
+
+                removePVT(board[x][y], x, y);
+                removePVT(board[xx][yy], xx, yy);
+
                 std::swap(board[xx][yy], board[x][y]);
                 std::swap(id_board[xx][yy], id_board[x][y]);
+
+                addPVT(board[x][y], x, y);
+                addPVT(board[xx][yy], xx, yy);
+
                 std::swap(px[id_board[x][y]], px[id_board[xx][yy]]);
                 std::swap(py[id_board[x][y]], py[id_board[xx][yy]]);
-                moved[id_board[xx][yy]]++;
-                moved[id_board[x][y]]++;
+
+                moved[id_board[xx][yy]]--;
+                moved[id_board[x][y]]--;
                 break;
             }
 
@@ -3332,13 +3413,17 @@ void unmakeMoves(int tur){
             case 4:
             {
                 pc_cnt--;
+                removePVT(pieces[pc_cnt], px[pc_cnt], py[pc_cnt]);
+
                 id_board[px[pc_cnt]][py[pc_cnt]]=-1;
                 board[px[pc_cnt]][py[pc_cnt]]=0;
                 morale[pieces[pc_cnt]&1]-=pmorale[pc_cnt];
+
                 /*pmorale[pc_cnt]=0;
                 px[pc_cnt]=-1;
                 py[pc_cnt]=-1;
                 pieces[pc_cnt]=-1;*/
+
                 break;
             }
             
@@ -3373,10 +3458,18 @@ void unmakeMoves(int tur){
                 int pc_id = undostack[tur][i][1];
                 int pc = undostack[tur][i][2];
                 int oval= undostack[tur][i][3];
+
+                removePVT(pieces[pc_id], px[pc_id], py[pc_id]);
+
                 morale[pieces[pc_id]&1]-=pmorale[pc_id];
                 morale[pc&1]+=oval;
+
                 board[px[pc_id]][py[pc_id]]=pc;
                 pmorale[pc_id]=oval;
+                pieces[pc_id]=pc;
+
+                addPVT(pc, px[pc_id], py[pc_id]);
+
                 break;            
             }
 
@@ -3559,13 +3652,15 @@ void endOfTurnTriggers(int side){
     }
 
     //samurai
+    side^=1;
     for(int i=0; i<samuraiPnt[side]; i++){
         int id=samuraiList[side][i];
         if(death[id])
             continue;
-        if(board[px[id]][py[id]+1-2*side]!=0&&board[px[id]][py[id]+1-2*side]&1!=side)
+        if(board[px[id]][py[id]+1-2*side]!=0&&(board[px[id]][py[id]+1-2*side]&1)!=side)
             makeMove(px[id], py[id]+1-2*side, id, 2);
     }
+    side^=1;
 
     if(king_id[side^1]==-1||death[king_id[side^1]]){
         payMorale(side^1, 3);
@@ -3882,21 +3977,17 @@ void loadPosition(std::string in)
         int x = (i-37)/8;
         int y = 7-(i-37)%8;
         //std::cout<<res[i]<<std::endl;
-        board[x][y]=getEncoding(res[i])+(res[i+64][0]-'0');
-        pieces[pc_cnt]=board[x][y];
-        id_board[x][y] = pc_cnt;
-        px[pc_cnt]=x;
-        py[pc_cnt]=y;
-        pmorale[pc_cnt]=pieceValue[board[x][y]/2];
-        morale[board[x][y]&1]+=pmorale[pc_cnt];
-        if(pieces[pc_cnt]==1034){
+        int type = getEncoding(res[i])+(res[i+64][0]-'0');
+        summonPiece(x, y, type);
+
+        if(pieces[pc_cnt-1]==1034){
             king_id[0]=pc_cnt;
         }
-        if(pieces[pc_cnt]==1035){
+        if(pieces[pc_cnt-1]==1035){
             king_id[1]=pc_cnt;
         }
-        pc_cnt++;
     }
+    undo_pnt[turn]=0;
 }
 
 
@@ -3915,9 +4006,29 @@ std::string getName(int piece){
     return name + std::to_string(mod+1) + end;
 }
 
+void recalculate_evaluation(){
+    int white_position = 0;
+    int black_position = 0;
+    for(int x=0; x<8; x++)
+        for(int y=0; y<8; y++){
+            if(board[x][y]==0)
+                continue;
+            if((board[x][y]&1)==0)
+                white_position+=piece_square_tables[piece_type[board[x][y]/2]][x][y];
+            else
+                black_position+=piece_square_tables[piece_type[board[x][y]/2]][x][y];
+        }
+    if(position_bonus[0]!=white_position||position_bonus[1]!=black_position){
+        std::cout<<position_bonus[0]<<" "<<white_position<<" "<<position_bonus[1]<<" "<<black_position<<std::endl;
+        throw 1;
+    }
+}
+
+int static_evaluation(int side);
 void printState(){
 
     std::cout<<"White morale: "<<morale[0]<<" "<<"Black morale: "<<morale[1]<<std::endl;
+    std::cout<<static_evaluation(turn&1)<<std::endl;
     for(int y=7; y>=0; y--){
         for(int x=0; x<=7; x++){
             if(board[x][y]==0)
@@ -3940,19 +4051,22 @@ void printCandidateMoves(){
     std::cout << std::endl;
 }
 
-int nodes=0;
+long long nodes=0;
 int static_evaluation(int side){
     ++nodes;
-    return morale[0]-morale[1];
+    return (morale[0]-morale[1])*100 + (position_bonus[0]-position_bonus[1]);
 }
 
 int print_cnt=0;
+int start_turn=0;
+int move_chosen[4]={};
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
+    
     if (morale[0] == 0)
-        return morale[1] == 0 ? 0 : -1000;
+        return morale[1] == 0 ? 0 : -1000000;
     if (morale[1] == 0)
-        return 1000;
+        return 1000000;
     if (0 == mdepth)
         return static_evaluation(side);
 
@@ -3963,40 +4077,62 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             generateMoves(i, px[i], py[i]);
     }
     //printCandidateMoves();
-    int best = 100*(-1+2*side);
+    int best = 1000000*(-1+2*side);
+    int bm =-1;
     for(int i=0; i<candidate_pointer[turn]; i++){
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);
-        if(print_cnt++<100000)
-            printState();
+        //printState();
+        //recalculate_evaluation();
         ++turn;
         int res = evaluate(-1, -1, mdepth-1, side^1);
-        if(!side)
+        if(!side){
             best = std::max(best, res);
-        else
-            best = std::min(best, res);
-        --turn;
-        unmakeMoves(turn);
-        if(print_cnt++<100000){
-            std::cout<<"UNMAKE"<<std::endl;
-            printState();
+            if(best==res)
+                bm=i;
         }
+        else{
+            best = std::min(best, res);
+            if(best==res)
+                bm=i;
+        }
+        --turn;
+        //std::cout<<"UNMAKE"<<std::endl;
+        unmakeMoves(turn);
+        //printState();
+        //recalculate_evaluation();
     }
     //if(best==100){
     //    printState();
     //}
+    if(turn==start_turn)
+    {
+        move_chosen[0]=candidateMoveStack[turn][bm][0];
+        move_chosen[1]=candidateMoveStack[turn][bm][1];
+        move_chosen[2]=candidateMoveStack[turn][bm][2];
+        move_chosen[3]=candidateMoveStack[turn][bm][3];
+
+    }
     return best;
 }
 
+void printChosenMove(){
+    std::cout<<"Best move: "<<move_chosen[0]<<" "<<move_chosen[1]<<" "<<move_chosen[2]<<" "<<move_chosen[3]<<std::endl;
+    
+}
 
-
+void makeChosenMove(){
+    //turn++;
+    makeMove(move_chosen[0], move_chosen[1], move_chosen[2], move_chosen[3]);
+}
 
 int main()
 {
     init();
-   // loadPosition("56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28");
+    //loadPosition("56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28");
     //loadPosition("56,Usernametaken12#5978,loading,3000,0,v56_replay,152,20,14,7,7,7,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Rook,Pawn,,,,,Pawn,Rook,Knight,Pawn,,,,,Pawn,Knight,Bishop,Pawn,,,,,Pawn,Bishop,King,Pawn,,,,,Pawn,Queen,Queen,Pawn,,,,,Pawn,King,Bishop,Pawn,,,,,Pawn,Bishop,Knight,Pawn,,,,,Pawn,Knight,Rook,Pawn,,,,,Pawn,Rook,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,50,34");
-    loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,114,18,38,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Greed4,Bomber,,,,,Drake,Queen,Banshee4,Fireball2,,,,,Drake,HauntedArmor,SoulKeeper4,Fireball3,,,,,Drake,Wizard,King,Fireball2,,,,,Drake,Knight,Enchantress4,Fireball2,,,,,Drake,Knight,SoulKeeper4,Fireball3,,,,,Drake,Dragon,Banshee4,Fireball2,,,,,Militia,King,Greed4,Bomber,,,,,Militia,Dryad,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,44,5,21");
+    //loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,114,18,38,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Greed4,Bomber,,,,,Drake,Queen,Banshee4,Fireball2,,,,,Drake,HauntedArmor,SoulKeeper4,Fireball3,,,,,Drake,Wizard,King,Fireball2,,,,,Drake,Knight,Enchantress4,Fireball2,,,,,Drake,Knight,SoulKeeper4,Fireball3,,,,,Drake,Dragon,Banshee4,Fireball2,,,,,Militia,King,Greed4,Bomber,,,,,Militia,Dryad,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,44,5,21");
+    loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,41,65,23,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Queen3,Mercenary,,,,,Drake,Warrior3,Berserker,Mercenary,,,,,Drake,Warrior3,Knight,Samurai,,,,,Samurai,Demon,Knight,Samurai,,,,,Samurai,King,King,Samurai,,,,,Samurai,Knight,Demon,Samurai,,,,,Samurai,Knight,Warrior3,Drake,,,,,Mercenary,Berserker,Warrior3,Drake,,,,,Mercenary,Queen3,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,54,46");
     /*for(int i=0; i<pc_cnt; i++)
         generateMoves(i, px[i], py[i]);
     printCandidateMoves();
@@ -4011,14 +4147,31 @@ int main()
         printState();
     }*/
     //std::cout<<pc_cnt<<std::endl;
-    auto start = std::chrono::system_clock::now();
-    std::cout<<"evaluation: "<<evaluate(-1, -1, 4, 0)<<std::endl;
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end-start;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-    std::cout << "elapsed time: " << elapsed_seconds.count() << "s"
-    << std::endl;
-    std::cout << "nodes: "<<nodes<<std::endl;
+    while(true){
+        printState();
+        auto start = std::chrono::system_clock::now();
+        std::cout<<"evaluation: "<<evaluate(-1, -1, 4, 0)<<std::endl;
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end-start;
+        std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+        std::cout << "elapsed time: " << elapsed_seconds.count() << "s"
+        << std::endl;
+        std::cout << "nodes: "<<nodes<<std::endl;
+        printChosenMove();
+        makeChosenMove();
+        //printState();
+        endOfTurnTriggers(0);
+        printState();
+        turn++;
+        start_turn++;
+
+        int xx, yy, id, mt;
+        std::cin>>xx>>yy>>id>>mt;
+        makeMove(xx, yy, id, mt);
+        endOfTurnTriggers(1);
+        turn++;
+        start_turn++;
+    }
     return 1;
 }
 
