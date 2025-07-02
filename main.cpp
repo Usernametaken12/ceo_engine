@@ -4312,6 +4312,105 @@ void printCandidateMoves(){
     std::cout << std::endl;
 }
 
+const int agrobonus=10000;
+int moveScore(int mnum){
+    int xx = candidateMoveStack[turn][mnum][0];
+    int yy = candidateMoveStack[turn][mnum][1];
+    int pc_id = candidateMoveStack[turn][mnum][2];
+    switch(candidateMoveStack[turn][mnum][3]){
+        case 1: //move
+            return 0;
+        case 2: //attack
+            return agrobonus + pmorale[id_board[xx][yy]]-pmorale[pc_id];
+        case 3:
+            return -1;
+        case 4:
+            return -1;
+        case 5:
+            return 2;
+        case 6:
+            return 3;
+        case 7:
+            return agrobonus + pmorale[id_board[xx][yy]]-300;
+        case 8:
+            return agrobonus + pmorale[id_board[xx][yy]]-300;
+        case 9:
+            return agrobonus + pmorale[id_board[xx][yy]]-100;
+        case 10:
+            return 1;
+        case 11:
+            return 4;
+        case 12:
+            return 1;
+        case 13:
+            return 2;
+        case 14:
+            return agrobonus + pmorale[id_board[xx][yy]]+100;
+        case 15:
+            return agrobonus + pmorale[id_board[xx][yy]]+150;
+        case 16:
+            return agrobonus + pmorale[id_board[xx][yy]]+200;
+        case 17:
+            return agrobonus + pmorale[id_board[xx][yy]]+300;
+        case 18:
+            return -2;
+        case 19:
+            return -3;
+        case 20:
+            return -500;
+        case 21:
+            return -100;
+        case 22:
+            return -50;
+        case 23:
+            return -50;
+        case 24:
+            return 200;
+        case 25:
+            return -300;
+        case 26:
+            return agrobonus + pmorale[id_board[xx][yy]] - pmorale[pc_id];
+        case 27:
+            return -10;
+        case 28: 
+            return agrobonus + pmorale[id_board[xx][yy]]-pmorale[pc_id];
+        case 29:
+            return agrobonus +  2*pmorale[id_board[xx][yy]];
+        case 30:
+            return agrobonus + pmorale[id_board[xx][yy]] - pmorale[pc_id];
+        case 31:
+            return -100;
+        default:
+            throw std::invalid_argument( "unexpected move type" ); 
+    }
+    return -1;
+}
+
+void selectionSort(int start){
+    int best = -1;
+    int score = -1000000;
+    for(int i=start; i<candidate_pointer[turn]; i++){
+        int res = moveScore(i);
+        if(res>score){
+            best = i;
+            score=res;
+        }
+    }
+    std::swap(candidateMoveStack[turn][start][0], candidateMoveStack[turn][best][0]);
+    std::swap(candidateMoveStack[turn][start][1], candidateMoveStack[turn][best][1]);
+    std::swap(candidateMoveStack[turn][start][2], candidateMoveStack[turn][best][2]);
+    std::swap(candidateMoveStack[turn][start][3], candidateMoveStack[turn][best][3]);
+}
+
+int quicksortArray[200][200] = {};
+void quickSort(){
+    for(int i=0; i<candidate_pointer[turn]; i++){
+        quicksortArray[turn][i] = ((moveScore(i)+agrobonus)<<8)+i;
+    }
+    
+    std::sort(std::begin(quicksortArray[turn]), quicksortArray[turn] + candidate_pointer[turn], std::greater<int>());
+}
+
 long long nodes=0;
 int static_evaluation(int side){
     ++nodes;
@@ -4345,7 +4444,9 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
     int bm =-1;
     int res=-1;
-    for(int i=0; i<candidate_pointer[turn]; i++){
+    quickSort();
+    for(int j=0; j<candidate_pointer[turn]; j++){
+        int i = quicksortArray[turn][j]&((1<<8)-1);
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);
         ++turn;
@@ -4417,16 +4518,17 @@ int main()
     }*/
     //std::cout<<pc_cnt<<std::endl;
     while(true){
-        printState();
+        //printState();
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 7, 0)<<std::endl;
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 8, 0)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
         std::cout << "elapsed time: " << elapsed_seconds.count() << "s"
         << std::endl;
         std::cout << "nodes: "<<nodes<<std::endl;
-        printChosenMove();
+        break;
+        /*printChosenMove();
         makeChosenMove();
         //printState();
         endOfTurnTriggers(0);
@@ -4439,7 +4541,7 @@ int main()
         makeMove(xx, yy, id, mt);
         endOfTurnTriggers(1);
         turn++;
-        start_turn++;
+        start_turn++;*/
     }
     return 1;
 }
