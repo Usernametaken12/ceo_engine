@@ -25,6 +25,7 @@ int death[200] = {0};
 long long status[200] = {0};
 bool voided[200] = {};
 bool nulled[200] = {};
+bool transparent[200] = {};
 int moved[200] = {0};
 int px[200] = {0};
 int py[200] = {0};
@@ -35,11 +36,12 @@ int turn = 0;
 
 int king_id[2] = {-1, -1};
 
-bool freeze_immune[1050] = {};
-bool petrify_immune[1050] = {};
-bool poison_immune[1050] = {};
-bool siren_immune[1050] = {};
-bool displacement_immune[1050] = {};
+//first value is a spacer! 
+bool freeze_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1};
+bool petrify_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1};
+bool poison_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1};
+bool siren_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1};
+bool displacement_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1};
 
 //first value is a spacer! 
 bool isMinion[1050] = {0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -138,6 +140,27 @@ void addMove(int xx, int yy, int pc_id, int nMoveType)
     candidateMoveStack[turn][candidate_pointer[turn]++][3] = nMoveType;
 }
 
+bool isPoisoned(int pc_id)
+{
+    return (status[pc_id] & ((1LL << 7) - 1)) > 0;
+}
+bool isFrozen(int pc_id)
+{
+    return (status[pc_id] & ((1LL << 14) - (1LL << 7))) > 0;
+}
+bool isCompeled(int pc_id)
+{
+    return (status[pc_id] & ((1LL << 21) - (1LL << 14))) > 0;
+}
+bool isPetrified(int pc_id)
+{
+    return (status[pc_id] & ((1LL << 32) - (1LL << 21))) > 0;
+}
+bool isEnchanted(int pc_id)
+{
+    return (status[pc_id] & ((1LL << 38) - (1LL << 32))) > 0;
+}
+
 void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int moveType)
 {
     //std::cout<<"moveGen "<<xx<<" "<<yy<<" "<<piece<<" "<<moveType<<std::endl;
@@ -174,8 +197,8 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
             addMove(xx, yy, pc_id, 14);
         break;
-    case 6: // wind //come back to this
-        if (board[xx][yy] != 0)
+    case 6: // wind 
+        if (board[xx][yy] != 0 && !displacement_immune[board[xx][yy]/2])
         {
             int dx = xx - x;
             int dy = yy - y;
@@ -183,18 +206,31 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
                                       : 0;
             dy = dy < 0 ? -1 : dy > 0 ? 1
                                       : 0;
-            // if(xx+dx>=0&&)
+            for(int i=1; i<=3; i++){
+                if(xx+dx*i<0||xx+dx*i>7||yy+dy*i<0||yy+dy*i>7)
+                    break;
+                if(board[xx+dx*i][yy+dy*i]==0){
+                    addMove(xx, yy, pc_id, 13);
+                    break;
+                }
+                else{
+                    if(board[xx+dx*i][yy+dy*i]&2024)
+                        continue;
+                    else
+                        break;
+                }
+            }
         }
         break;
     case 7: // ranged petrify
         if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!petrify_immune[board[xx][yy] & (2048 - 1)]))
-            if (!(piece >= 346 && piece < 354) || status[id_board[xx][yy]])
+            if (!(piece >= 346 && piece < 354) || !isPetrified(id_board[xx][yy]))
                 addMove(xx, yy, pc_id, 6);
         break;
     case 10: // move or swap
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 1);
-        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 0)
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 0 && !displacement_immune[board[xx][yy]])
             addMove(xx, yy, pc_id, 3);
         break;
     case 12: // tree
@@ -216,7 +252,9 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!freeze_immune[board[xx][yy] & (2048 - 1)]))
             addMove(xx, yy, pc_id, 5);
         break;
-    case 16: // poison (not yet implemented)
+    case 16: // poison 
+        if(board[xx][yy]!=0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!poison_immune[(board[xx][yy] & (2048 - 1))/2]) && isPoisoned(id_board[xx][yy]))
+            addMove(xx, yy, pc_id, 7);
         break;
     case 17: // attack minion
         if (board[xx][yy] != 0 && isMinion[board[xx][yy] & (2048 - 1)] && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
@@ -257,7 +295,7 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && isMinion[board[xx][yy] & (2048 - 1)])
             addMove(xx, yy, pc_id, 29);
         break;
-    case 29: // summoner(not implemented)
+    case 29: // summoner (not implemented)
         break;
     case 30: // summon skeleton
         if (board[xx][yy] == 0)
@@ -272,7 +310,7 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 33: // comet suicide (not implemented)
         break;
     case 34: // enchant (not implmented yet)
-        break;
+        addMove(xx, yy, pc_id, 11);
     case 35: // transform into bat
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 25);
@@ -283,7 +321,7 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 37: // omniswap
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 1);
-        else
+        else if(!displacement_immune[board[xx][yy]/2])
             addMove(xx, yy, pc_id, 3);
         break;
     case 38: // NA
@@ -291,13 +329,14 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 39: // augmented teleport (not implemented)
         break;
     case 40: // siren (not implemented yet)
-        break;
+        if(!siren_immune[board[xx][yy]/2])
+            addMove(xx, yy, pc_id, 10);
     case 41: // ghost
         if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
             addMove(xx, yy, pc_id, 17);
         break;
     case 42: // rush (implement displacement immune)
-        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && !displacement_immune[board[xx][yy]])
             addMove(xx, yy, pc_id, 30);
         break;
     case 43: // void (not implemented yet)
@@ -2935,27 +2974,6 @@ void generateMoves(int pc_id, int x, int y)
     
 }
 
-bool isPoisoned(int pc_id)
-{
-    return (status[pc_id] & ((1LL << 7) - 1)) > 0;
-}
-bool isFrozen(int pc_id)
-{
-    return (status[pc_id] & ((1LL << 14) - (1LL << 7))) > 0;
-}
-bool isCompeled(int pc_id)
-{
-    return (status[pc_id] & ((1LL << 21) - (1LL << 14))) > 0;
-}
-bool isPetrified(int pc_id)
-{
-    return (status[pc_id] & ((1LL << 32) - (1LL << 21))) > 0;
-}
-bool isEnchanted(int pc_id)
-{
-    return (status[pc_id] & ((1LL << 38) - (1LL << 32))) > 0;
-}
-
 void addPVT(int pc, int x, int y){
     position_bonus[pc&1]+=piece_square_tables[piece_type[pc/2]][x][y];
 }
@@ -3327,6 +3345,9 @@ void swap(int x, int y, int xx, int yy, int pc_id){
 }
 
 void inflictStatus(int nstatus, int xx, int yy, int pc_id){
+    if(board[xx][yy]>=82 && board[xx][yy] <= 90 && nstatus>=7 && nstatus<=13)
+        return killPiece(xx, yy, pc_id, 1);
+
     status[id_board[xx][yy]]|=(1<<nstatus);
     undostack[turn][undo_pnt[turn]][0]=3;
     undostack[turn][undo_pnt[turn]][1]=id_board[xx][yy];
@@ -3560,6 +3581,8 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
         case 28: //jump attacker
             break;
         case 29: //charm
+            if(pieces[pc_id]>=738&&pieces[pc_id]<746)
+                killPiece(px[pc_id], py[pc_id], pc_id);
             replacePiece(xx, yy, id_board[xx][yy], board[xx][yy]^1);
             break;
         case 30: //rush
@@ -4310,39 +4333,46 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
     candidate_pointer[turn]=0;
     for(int i=0; i<pc_cnt; i++){
-        //std::cout<<pieces[i]<<std::endl;
         if((pieces[i]&1)==side&&!death[i])
             generateMoves(i, px[i], py[i]);
     }
-    //printCandidateMoves();
+
     int best = 1000000*(-1+2*side);
+    if(side==0)
+        best=alpha;
+    else
+        best=beta;
+
     int bm =-1;
+    int res=-1;
     for(int i=0; i<candidate_pointer[turn]; i++){
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);
-        //printState();
-        //recalculate_evaluation();
         ++turn;
-        int res = evaluate(-1, -1, mdepth-1, side^1);
+
+        if(side)
+            res = evaluate(alpha, best, mdepth-1, side^1);
+        else
+            res = evaluate(best, beta, mdepth-1, side^1);
+    
+        --turn;
+        unmakeMoves(turn);
+
         if(!side){
             best = std::max(best, res);
             if(best==res)
                 bm=i;
+            if(best>=beta)
+                break;
         }
         else{
             best = std::min(best, res);
             if(best==res)
                 bm=i;
+            if(best<=alpha)
+                break;
         }
-        --turn;
-        //std::cout<<"UNMAKE"<<std::endl;
-        unmakeMoves(turn);
-        //printState();
-        //recalculate_evaluation();
     }
-    //if(best==100){
-    //    printState();
-    //}
     if(turn==start_turn)
     {
         move_chosen[0]=candidateMoveStack[turn][bm][0];
@@ -4371,6 +4401,7 @@ int main()
     //loadPosition("56,Usernametaken12#5978,loading,3000,0,v56_replay,152,20,14,7,7,7,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Rook,Pawn,,,,,Pawn,Rook,Knight,Pawn,,,,,Pawn,Knight,Bishop,Pawn,,,,,Pawn,Bishop,King,Pawn,,,,,Pawn,Queen,Queen,Pawn,,,,,Pawn,King,Bishop,Pawn,,,,,Pawn,Bishop,Knight,Pawn,,,,,Pawn,Knight,Rook,Pawn,,,,,Pawn,Rook,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,50,34");
     //loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,114,18,38,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Greed4,Bomber,,,,,Drake,Queen,Banshee4,Fireball2,,,,,Drake,HauntedArmor,SoulKeeper4,Fireball3,,,,,Drake,Wizard,King,Fireball2,,,,,Drake,Knight,Enchantress4,Fireball2,,,,,Drake,Knight,SoulKeeper4,Fireball3,,,,,Drake,Dragon,Banshee4,Fireball2,,,,,Militia,King,Greed4,Bomber,,,,,Militia,Dryad,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,44,5,21");
     loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,41,65,23,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Queen3,Mercenary,,,,,Drake,Warrior3,Berserker,Mercenary,,,,,Drake,Warrior3,Knight,Samurai,,,,,Samurai,Demon,Knight,Samurai,,,,,Samurai,King,King,Samurai,,,,,Samurai,Knight,Demon,Samurai,,,,,Samurai,Knight,Warrior3,Drake,,,,,Mercenary,Berserker,Warrior3,Drake,,,,,Mercenary,Queen3,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,54,46");
+    //loadPosition("54,whitename,blackname,2500,2500,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Pawn,,,,,Drake,Warrior,Bishop,Pawn,,,,,Drake,Warrior,Wizard,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Warrior,Knight,Militia,,,,,Drake,King,Knight,Militia,,,,,Drake,Demon,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0");
     /*for(int i=0; i<pc_cnt; i++)
         generateMoves(i, px[i], py[i]);
     printCandidateMoves();
@@ -4388,7 +4419,7 @@ int main()
     while(true){
         printState();
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1, -1, 4, 0)<<std::endl;
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 7, 0)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
