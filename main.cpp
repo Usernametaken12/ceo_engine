@@ -783,6 +783,89 @@ void bomberBackward(int range, int moveType, int piece, int pc_id, int x, int y)
     }
 }
 
+void fortress(int range, int piece, int pc_id, int x, int y){
+    if(x+1<8&&y+1<8&&board[x+1][y+1]==0){
+        addCandidateMove(x, y, x+1, y+1, piece, pc_id, 1);
+
+        for(int xx=2; xx<=std::min(7-x, range); xx++){
+            addCandidateMove(x,y,x+xx, y+1, piece, pc_id, 4);
+            if(board[x+xx][y+1]==0 || transparent[id_board[x+xx][y+1]])
+                continue;
+            else
+                break;
+        }
+
+        for(int yy=2; yy<=std::min(7-y, range); yy++){
+            addCandidateMove(x,y,x+1, y+yy, piece, pc_id, 4);
+            if(board[x+1][y+yy]==0 || transparent[id_board[x+1][y+yy]])
+                continue;
+            else
+                break;
+        }
+    }
+
+    if(x+1<8&&y-1>=0&&board[x+1][y-1]==0){
+        addCandidateMove(x, y, x+1, y-1, piece, pc_id, 1);
+        
+        for(int xx=2; xx<=std::min(7-x, range); xx++){
+            addCandidateMove(x,y,x+xx, y-1, piece, pc_id, 4);
+            if(board[x+xx][y-1]==0 || transparent[id_board[x+xx][y-1]])
+                continue;
+            else
+                break;
+        }
+
+        for(int yy=2; yy<=std::min(y, range); yy++){
+            addCandidateMove(x,y,x+1, y-yy, piece, pc_id, 4);
+            if(board[x+1][y-yy]==0 || transparent[id_board[x+1][y-yy]])
+                continue;
+            else
+                break;
+        }
+    }
+
+    if(x-1>=0&&y-1>=0&&board[x-1][y-1]==0){
+        addCandidateMove(x, y, x-1, y-1, piece, pc_id, 1);
+        
+        for(int xx=2; xx<=std::min(x, range); xx++){
+            addCandidateMove(x,y,x-xx, y-1, piece, pc_id, 4);
+            if(board[x-xx][y-1]==0 || transparent[id_board[x-xx][y-1]])
+                continue;
+            else
+                break;
+        }
+
+        for(int yy=2; yy<=std::min(y, range); yy++){
+            addCandidateMove(x,y,x-1, y-yy, piece, pc_id, 4);
+            if(board[x-1][y-yy]==0 || transparent[id_board[x-1][y-yy]])
+                continue;
+            else
+                break;
+        }
+    }
+
+    if(x-1>=0&&y+1<8&&board[x-1][y+1]==0){
+        addCandidateMove(x, y, x-1, y+1, piece, pc_id, 1);
+
+        for(int xx=2; xx<=std::min(x, range); xx++){
+            addCandidateMove(x,y,x-xx, y+1, piece, pc_id, 4);
+            if(board[x-xx][y+1]==0 || transparent[id_board[x-xx][y+1]])
+                continue;
+            else
+                break;
+        }
+
+        for(int yy=2; yy<=std::min(7-y, range); yy++){
+            addCandidateMove(x,y,x-1, y+yy, piece, pc_id, 4);
+            if(board[x-1][y+yy]==0 || transparent[id_board[x-1][y+yy]])
+                continue;
+            else
+                break;
+        }
+    }
+}
+
+
 void generateMoves(int pc_id, int x, int y)
 {
     //std::cout<<pc_id<<" "<<x<<" "<<y<<std::endl;
@@ -2704,12 +2787,20 @@ void generateMoves(int pc_id, int x, int y)
         knight(10, piece, pc_id, x, y);
         break;
     case 850: // Fortress
+        fortress(3, piece, pc_id, x, y);
+        rook(3, 3, piece, pc_id, x, y);
         break;
     case 852:
+        fortress(4, piece, pc_id, x, y);
+        rook(4, 3, piece, pc_id, x, y);
         break;
     case 854:
+        fortress(5, piece, pc_id, x, y);
+        rook(5, 3, piece, pc_id, x, y);
         break;
     case 856:
+        fortress(6, piece, pc_id, x, y);
+        rook(6, 3, piece, pc_id, x, y);
         break;
     case 858: // Gemini
         rookHorizontal(3, -1, piece, pc_id, x, y, 3);
