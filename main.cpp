@@ -365,7 +365,9 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         break;
     case 26: // lifestone (not implemented)
         break;
-    case 27: // null (not yet implemented)
+    case 27: // null 
+        if(board[xx][yy] != 0 &&  ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && !nulled[id_board[xx][yy]])
+            addMove(xx, yy, pc_id, 9);
         break;
     case 28: // charm
         if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && isMinion[board[xx][yy]/2])
@@ -2333,20 +2335,39 @@ void generateMoves(int pc_id, int x, int y)
         rook(4, 10, piece, pc_id, x, y, 3);
         break;
     case 690: // Patience
+        if(turn<50){
+            bishop(3, 1, piece, pc_id, x, y);
+            break;
+        }
         bishop(3, 3, piece, pc_id, x, y);
         rook(1, 4, piece, pc_id, x, y);
         break;
     case 692:
+        if(turn<60){
+            bishop(4, 1, piece, pc_id, x, y);
+            rook(1, 1, piece, pc_id, x, y);
+            break;
+        }
         bishop(4, 3, piece, pc_id, x, y);
         rook(1, 3, piece, pc_id, x, y);
         rook(2, 4, piece, pc_id, x, y, 2);
         break;
     case 694:
+        if(turn<70){
+            bishop(5, 1, piece, pc_id, x, y);
+            rook(2, 1, piece, pc_id, x, y);
+            break;
+        }
         bishop(5, 3, piece, pc_id, x, y);
         rook(2, 3, piece, pc_id, x, y);
         rook(3, 4, piece, pc_id, x, y, 3);
         break;
     case 696:
+        if(turn<80){
+            bishop(5, 1, piece, pc_id, x, y);
+            rook(2, 1, piece, pc_id, x, y);
+            break;
+        }
         bishop(7, 3, piece, pc_id, x, y);
         rook(3, 3, piece, pc_id, x, y);
         rook(4, 4, piece, pc_id, x, y, 4);
@@ -3620,6 +3641,19 @@ void cureUnit(int xx, int yy, int pc_id){
     status[pc_id]<<=32; 
 }
 
+void nullPiece(int xx, int yy, int pc_id){
+    undostack[turn][undo_pnt[turn]][0]=12;
+    undostack[turn][undo_pnt[turn]][1]=id_board[xx][yy];
+    undostack[turn][undo_pnt[turn]][2]=board[xx][yy]+2048*transparent[pc_id];
+    undostack[turn][undo_pnt[turn]][3]=pmorale[id_board[xx][yy]];
+    undo_pnt[turn]++;
+
+    nulled[id_board[xx][yy]]=1;
+    transparent[id_board[xx][yy]]=1;
+    morale[board[xx][yy]&1]-=pmorale[id_board[xx][yy]];
+    pmorale[id_board[xx][yy]]=0;
+}
+
 //uses the refined list of 31 moves -> 10 or so operations
 void makeMove(int xx, int yy, int pc_id, int moveType){
     //std::cout<<xx<<" "<<yy<<" "<<pc_id<<" "<<moveType<<std::endl;
@@ -3647,6 +3681,7 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
         case 8: //void
             break;
         case 9: //null
+            nullPiece(xx, yy, pc_id);
             break;
         case 10: //compel 6
             inflictStatus(14, xx, yy, pc_id);
@@ -3974,6 +4009,20 @@ void unmakeMoves(int tur){
                         break;
                 }
                 break;
+            }
+
+            case 12:
+            {
+                int pc_id = undostack[turn][undo_pnt[turn]][1];
+                bool trans = (undostack[turn][undo_pnt[turn]][2]&2048);
+                int side= (undostack[turn][undo_pnt[turn]][2]&1);
+                int omorale = undostack[turn][undo_pnt[turn]][3];
+                undo_pnt[turn]++;
+
+                nulled[pc_id]=0;
+                transparent[pc_id]=trans;
+                pmorale[pc_id]=omorale;
+                morale[side]+=omorale;
             }
         }
     }
