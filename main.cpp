@@ -2163,12 +2163,32 @@ void generateMoves(int pc_id, int x, int y)
     case 616:
         break;
     case 618: // Harpy
+        rook(1, 6, piece, pc_id, x, y);
+        rook(4, 3, piece, pc_id, x, y, 2);
+        bishop(1, 3, piece, pc_id, x, y);
+        bishop(3, 9, piece, pc_id, x, y, 2);
+        mancer(9, piece, pc_id, x, y);
         break;
     case 620:
+        rook(1, 6, piece, pc_id, x, y);
+        rook(5, 3, piece, pc_id, x, y, 2);
+        bishop(1, 3, piece, pc_id, x, y);
+        bishop(3, 9, piece, pc_id, x, y, 2);
+        mancer(9, piece, pc_id, x, y);
         break;
     case 622:
+        rook(1, 6, piece, pc_id, x, y);
+        rook(6, 3, piece, pc_id, x, y, 2);
+        bishop(1, 3, piece, pc_id, x, y);
+        bishop(3, 9, piece, pc_id, x, y, 2);
+        mancer(9, piece, pc_id, x, y);
         break;
     case 624:
+        rook(1, 6, piece, pc_id, x, y);
+        rook(7, 3, piece, pc_id, x, y, 2);
+        bishop(1, 3, piece, pc_id, x, y);
+        bishop(3, 10, piece, pc_id, x, y, 2);
+        mancer(9, piece, pc_id, x, y);
         break;
     case 626: // Haunted Armor
         queen(1, 3, piece, pc_id, x, y);
@@ -3282,6 +3302,20 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 360:
             payMorale(1-(capturedPiece&1), 14);
             break;
+        case 418: //pikeman
+        case 420:
+        case 422:
+        case 424:
+        {
+            int dx = xx-px[pc_id];
+            if(dx==0)
+                break;
+            int dy = yy-py[pc_id];
+            if(std::abs(dx)<=2&&std::abs(dy)+std::abs(dx)==3&& dy * (-1+(2*capturedPiece&1))>0)
+                if(killType==0)
+                    killPiece(px[pc_id], py[pc_id], -1, -1);
+            break;
+        }
         case 482: //snake
         case 484:
         case 486:
@@ -3303,6 +3337,20 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 648:
             payMorale(capturedPiece&1, 8);
             break;
+        case 698: //phalanx
+        case 700:
+        case 702:
+        case 704:
+        {
+            int dx = xx-px[pc_id];
+            if(dx==0)
+                break;
+            int dy = yy-py[pc_id];
+            if(std::abs(dx)<=2&&std::abs(dy)+std::abs(dx)==3)
+                if(killType==0)
+                    killPiece(px[pc_id], py[pc_id], -1, -1);
+            break;
+        }    
         case 794: //angel
         case 796:
         case 798:
