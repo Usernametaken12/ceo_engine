@@ -52,9 +52,9 @@ int depth = 0;
 int morale[2] = {0};
 int position_bonus[2] = {};
 
-int piece_type[1050] = {100,1,2,2,3,2,3,2,3,1,1,1,2,3,1,3,1,3,2,2,1,3,1,1,1,2,1,2,1,3,3,3,3,3,3,3,3,1,1,3,3,3,1,3,1,1,3,3,3,3,1,3,1,1,1,3,1,3,3,3,2,1,3,1,1,3,3,3,3,3,1,3,1,0,3,3,3,3,3,3,3,2,3,1,3,3,3,3,3,3,3,1,2,1,3,3,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,3,3,3,3,3,3,3,0,0,0,0};
+int piece_type[1050] = {100,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,2,2,2,2,3,3,3,3,2,2,2,2,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,3,3,3,3,2,2,2,2,2,2,2,2,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,2,2,2,2,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,5,6,7,8,1,1,1,1,1,1,1,1,3,3,3,3,5,5,6,7,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,2,2,2,2,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,5,6,6,7,2,2,2,2,3,3,3,3,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,6,7,8,8,3,3,3,3,1,1,1,1,2,2,2,2,1,1,1,1,3,3,3,3,3,3,3,3,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0,0};
 
-int piece_square_tables[5][8][8] = {    
+int piece_square_tables[11][8][8] = {    
     {
         {0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0},
@@ -107,6 +107,72 @@ int piece_square_tables[5][8][8] = {
         {-60,-60,-60,-60,-60,-60,-60,-60},
         {-20,-20,-20,-20,-20,-20,-20,-20},
         {-30,-30,-30,-30,-30,-30,-30,-30},
+    },
+
+    {
+        {-100,-90,-70,-60,-60,-70,-90,-100},
+        {-90,-80,-60,-50,-50,-60,-80,-90},
+        {-80,-70,-40,-20,-20,-40,-70,-80},
+        {-70,-60,-20,0,0,-20,-60,-70},
+        {-70,-60,-40,-20,-20,-40,-60,-70},
+        {-80,-70,-50,-40,-40,-50,-70,-80},
+        {-90,-80,-60,-50,-50,-60,-80,-90},
+        {-100,-90,-80,-60,-60,-80,-90,-100}
+    },
+
+    {
+        {-200,-190,-170,-160,-160,-170,-190,-200},
+        {-190,-180,-160,-150,-150,-160,-180,-190},
+        {-180,-170,-140,-120,-120,-140,-170,-180},
+        {-170,-160,-120,-100,-100,-120,-160,-170},
+        {-170,-160,-140,-120,-120,-140,-160,-170},
+        {-180,-170,-150,-140,-140,-150,-170,-180},
+        {-190,-180,-160,-150,-150,-160,-180,-190},
+        {-200,-190,-180,-160,-160,-180,-190,-200}
+    },
+
+    {
+        {-300,-290,-270,-260,-260,-270,-290,-300},
+        {-290,-280,-260,-250,-250,-260,-280,-290},
+        {-280,-270,-240,-220,-220,-240,-270,-280},
+        {-270,-260,-220,-200,-200,-220,-260,-270},
+        {-270,-260,-240,-220,-220,-240,-260,-270},
+        {-280,-270,-250,-240,-240,-250,-270,-280},
+        {-290,-280,-260,-250,-250,-260,-280,-290},
+        {-300,-290,-280,-260,-260,-280,-290,-300},
+    },
+        
+    {
+        {-400,-390,-370,-360,-360,-370,-390,-400},
+        {-390,-380,-360,-350,-350,-360,-380,-390},
+        {-380,-370,-340,-320,-320,-340,-370,-380},
+        {-370,-360,-320,-300,-300,-320,-360,-370},
+        {-370,-360,-340,-320,-320,-340,-360,-370},
+        {-380,-370,-350,-340,-340,-350,-370,-380},
+        {-390,-380,-360,-350,-350,-360,-380,-390},
+        {-400,-390,-380,-360,-360,-380,-390,-400},
+    },
+
+    {
+        {-500,-490,-470,-460,-460,-470,-490,-500},
+        {-490,-480,-460,-450,-450,-460,-480,-490},
+        {-480,-470,-440,-420,-420,-440,-470,-480},
+        {-470,-460,-420,-400,-400,-420,-460,-470},
+        {-470,-460,-440,-420,-420,-440,-460,-470},
+        {-480,-470,-450,-440,-440,-450,-470,-480},
+        {-490,-480,-460,-450,-450,-460,-480,-490},
+        {-500,-490,-480,-460,-460,-480,-490,-500},
+    },
+    
+    {
+        {-600,-590,-570,-560,-560,-570,-590,-600},
+        {-590,-580,-560,-550,-550,-560,-580,-590},
+        {-580,-570,-540,-520,-520,-540,-570,-580},
+        {-570,-560,-520,-500,-500,-520,-560,-570},
+        {-570,-560,-540,-520,-520,-540,-560,-570},
+        {-580,-570,-550,-540,-540,-550,-570,-580},
+        {-590,-580,-560,-550,-550,-560,-580,-590},
+        {-600,-590,-580,-560,-560,-580,-590,-600}
     }
 };
 
@@ -181,13 +247,23 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         break;
     case 3:  // move or attack
     case 8:  // path (won't be implemented)
+        if (board[xx][yy] == 0)
+            addMove(xx, yy, pc_id, 1);
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1){
+            addMove(xx, yy, pc_id, 32);
+        }
+        break;
     case 11: // unblockable move or attack
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 1);
-        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1){
             addMove(xx, yy, pc_id, 2);
+        }
         break;
     case 4:  // attack only
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+            addMove(xx, yy, pc_id, 32);
+        break;
     case 19: // unblockable attack only
         if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
             addMove(xx, yy, pc_id, 2);
@@ -309,7 +385,7 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         break;
     case 33: // comet suicide (not implemented)
         break;
-    case 34: // enchant (not implmented yet)
+    case 34: // enchant
         addMove(xx, yy, pc_id, 11);
     case 35: // transform into bat
         if (board[xx][yy] == 0)
@@ -3590,6 +3666,58 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
         case 31: //upgrade skeleton
             replacePiece(xx, yy, id_board[xx][yy], board[xx][yy]+2);
             break;
+        case 32: //check armor
+        {
+            int tar = board[xx][yy];
+            int dx = xx - px[pc_id];
+            int dy = yy - py[pc_id];
+            if(tar>=66&&tar<74){ //duelist
+                if(dx==0&&dy*(1-2*(tar&1))){
+                    replacePiece(xx, yy, id_board[xx][yy], tar+8);
+                    break;
+                }
+            }
+            else if(tar>=274&&tar<282) //crusader
+            {
+                if(tar<280){
+                    if(std::abs(dx)+std::abs(dy)==1){
+                        replacePiece(xx, yy, id_board[xx][yy], tar+8);
+                        break;
+                    }
+                }
+                else if(std::abs(dx)+std::abs(dy)<=2&&std::abs(dx)!=std::abs(dy)){
+                    replacePiece(xx, yy, id_board[xx][yy], tar+8);
+                    break;
+                }
+            }
+            else if(tar>=306&&tar<314){ //fencer
+                if(tar<310){
+                    if(std::abs(dx)+std::abs(dy)==1){
+                        replacePiece(xx, yy, id_board[xx][yy], tar+8);
+                        break;
+                    }
+                }
+                else if(std::abs(dx)+std::abs(dy)<=2&&std::abs(dx)!=std::abs(dy)){
+                    replacePiece(xx, yy, id_board[xx][yy], tar+8);
+                    break;
+                }
+            }
+            else if(tar>=626&&tar<634){ //haunted armor
+                if(std::abs(dx)<=1&&std::abs(dy)<=1){
+                    replacePiece(xx, yy, id_board[xx][yy], tar+8);
+                    break;
+                }
+            }
+            else if(tar>=698&&tar<706){ //phalanx
+                if(std::abs(dx)<=1&&std::abs(dy)<=1){
+                    replacePiece(xx, yy, id_board[xx][yy], tar+8);
+                    break;
+                }
+            }
+            killPiece(xx, yy, pc_id);
+            moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
+            break;
+        }
     }
 }
 
@@ -4321,7 +4449,7 @@ int moveScore(int mnum){
         case 1: //move
             return 0;
         case 2: //attack
-            return agrobonus + pmorale[id_board[xx][yy]]-pmorale[pc_id];
+            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100;
         case 3:
             return -1;
         case 4:
@@ -4331,11 +4459,11 @@ int moveScore(int mnum){
         case 6:
             return 3;
         case 7:
-            return agrobonus + pmorale[id_board[xx][yy]]-300;
+            return agrobonus + pmorale[id_board[xx][yy]]*100-300;
         case 8:
-            return agrobonus + pmorale[id_board[xx][yy]]-300;
+            return agrobonus + pmorale[id_board[xx][yy]]*100-300;
         case 9:
-            return agrobonus + pmorale[id_board[xx][yy]]-100;
+            return agrobonus + pmorale[id_board[xx][yy]]*100-100;
         case 10:
             return 1;
         case 11:
@@ -4345,13 +4473,13 @@ int moveScore(int mnum){
         case 13:
             return 2;
         case 14:
-            return agrobonus + pmorale[id_board[xx][yy]]+100;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+100;
         case 15:
-            return agrobonus + pmorale[id_board[xx][yy]]+150;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+150;
         case 16:
-            return agrobonus + pmorale[id_board[xx][yy]]+200;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+200;
         case 17:
-            return agrobonus + pmorale[id_board[xx][yy]]+300;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+300;
         case 18:
             return -2;
         case 19:
@@ -4369,23 +4497,26 @@ int moveScore(int mnum){
         case 25:
             return -300;
         case 26:
-            return agrobonus + pmorale[id_board[xx][yy]] - pmorale[pc_id];
+            return agrobonus + (pmorale[id_board[xx][yy]] - pmorale[pc_id])*100;
         case 27:
             return -10;
         case 28: 
-            return agrobonus + pmorale[id_board[xx][yy]]-pmorale[pc_id];
+            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100;
         case 29:
-            return agrobonus +  2*pmorale[id_board[xx][yy]];
+            return agrobonus +  200*pmorale[id_board[xx][yy]];
         case 30:
-            return agrobonus + pmorale[id_board[xx][yy]] - pmorale[pc_id];
+            return agrobonus + (pmorale[id_board[xx][yy]] - pmorale[pc_id])*100;
         case 31:
             return -100;
+        case 32:
+            return 500;
         default:
             throw std::invalid_argument( "unexpected move type" ); 
     }
     return -1;
 }
 
+int quicksortArray[200][200] = {};
 void selectionSort(int start){
     int best = -1;
     int score = -1000000;
@@ -4402,7 +4533,6 @@ void selectionSort(int start){
     std::swap(candidateMoveStack[turn][start][3], candidateMoveStack[turn][best][3]);
 }
 
-int quicksortArray[200][200] = {};
 void quickSort(){
     for(int i=0; i<candidate_pointer[turn]; i++){
         quicksortArray[turn][i] = ((moveScore(i)+agrobonus)<<8)+i;
@@ -4413,8 +4543,67 @@ void quickSort(){
 
 long long nodes=0;
 int static_evaluation(int side){
-    ++nodes;
     return (morale[0]-morale[1])*100 + (position_bonus[0]-position_bonus[1]);
+}
+
+int quiesence(int alpha, int beta, int side)
+{
+    ++nodes;
+    //printState();
+    if (morale[0] == 0)
+        return morale[1] == 0 ? 0 : -1000000;
+    if (morale[1] == 0)
+        return 1000000;
+
+    candidate_pointer[turn]=0;
+    for(int i=0; i<pc_cnt; i++){
+        if((pieces[i]&1)==side&&!death[i])
+            generateMoves(i, px[i], py[i]);
+    }
+
+    int best = 1000000*(-1+2*side);
+    if(side==0)
+        best=alpha;
+    else
+        best=beta;
+
+    int bm =-1;
+    int res=-1;
+    quickSort();
+    for(int j=0; j<candidate_pointer[turn]; j++){
+        if((quicksortArray[turn][j]>>8)<2*agrobonus-1000)
+            break;
+        int i = quicksortArray[turn][j]&((1<<8)-1);
+        makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
+        endOfTurnTriggers(side);
+        ++turn;
+
+        if(side)
+            res = quiesence(alpha, best, side^1);
+        else
+            res = quiesence(best, beta, side^1);
+    
+        --turn;
+        unmakeMoves(turn);
+
+        if(!side){
+            best = std::max(best, res);
+            if(best==res)
+                bm=i;
+            if(best>=beta)
+                break;
+        }
+        else{
+            best = std::min(best, res);
+            if(best==res)
+                bm=i;
+            if(best<=alpha)
+                break;
+        }
+    }
+    if(bm==-1)
+        return static_evaluation(side);
+    return best;
 }
 
 int print_cnt=0;
@@ -4422,14 +4611,15 @@ int start_turn=0;
 int move_chosen[4]={};
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
-    
+    ++nodes;
     if (morale[0] == 0)
         return morale[1] == 0 ? 0 : -1000000;
     if (morale[1] == 0)
         return 1000000;
-    if (0 == mdepth)
-        return static_evaluation(side);
-
+    if (0 == mdepth){
+        //std::cout<<"BEGIN"<<std::endl;
+        return quiesence(alpha, beta, side);
+    }
     candidate_pointer[turn]=0;
     for(int i=0; i<pc_cnt; i++){
         if((pieces[i]&1)==side&&!death[i])
@@ -4480,7 +4670,6 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         move_chosen[1]=candidateMoveStack[turn][bm][1];
         move_chosen[2]=candidateMoveStack[turn][bm][2];
         move_chosen[3]=candidateMoveStack[turn][bm][3];
-
     }
     return best;
 }
@@ -4520,7 +4709,7 @@ int main()
     while(true){
         //printState();
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 8, 0)<<std::endl;
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 7, 0)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
