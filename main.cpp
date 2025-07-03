@@ -3,7 +3,7 @@
 #include <bits/stdc++.h>
 
 //(0, 0) is bottom left corner of board
-int board[8][8] = {0}; // 2048 means transparent version of piece
+int board[8][8] = {0};
 int id_board[8][8];
 
 int lightning[8][8] = {0};
@@ -299,14 +299,14 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         }
         break;
     case 7: // ranged petrify
-        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!petrify_immune[board[xx][yy] & (2048 - 1)]))
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!petrify_immune[board[xx][yy]/2]))
             if (!(piece >= 346 && piece < 354) || !isPetrified(id_board[xx][yy]))
                 addMove(xx, yy, pc_id, 6);
         break;
     case 10: // move or swap
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 1);
-        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 0 && !displacement_immune[board[xx][yy]])
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 0 && !displacement_immune[board[xx][yy]/2])
             addMove(xx, yy, pc_id, 3);
         break;
     case 12: // tree
@@ -325,15 +325,15 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 14: // jump attack (not implemented)
         break;
     case 15: // freeze
-        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!freeze_immune[board[xx][yy] & (2048 - 1)]))
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!freeze_immune[board[xx][yy]/2]))
             addMove(xx, yy, pc_id, 5);
         break;
     case 16: // poison 
-        if(board[xx][yy]!=0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!poison_immune[(board[xx][yy] & (2048 - 1))/2]) && isPoisoned(id_board[xx][yy]))
+        if(board[xx][yy]!=0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!poison_immune[board[xx][yy]/2]) && isPoisoned(id_board[xx][yy]))
             addMove(xx, yy, pc_id, 7);
         break;
     case 17: // attack minion
-        if (board[xx][yy] != 0 && isMinion[board[xx][yy] & (2048 - 1)] && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        if (board[xx][yy] != 0 && isMinion[board[xx][yy]/2] && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
             addMove(xx, yy, pc_id, 2);
         break;
     case 18: // freeze push
@@ -341,9 +341,9 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
             addMove(xx, yy, pc_id, 12);
         break;
     case 20: // necromagic
-        if (board[xx][yy] != 0 && isMinion[board[xx][yy] & (2048 - 1)] && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        if (board[xx][yy] != 0 && isMinion[board[xx][yy]/2] && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
             addMove(xx, yy, pc_id, 16);
-        else if (board[xx][yy] != 0 && (board[xx][yy] & (2048 - 1)) >= 178 && (board[xx][yy] & (2048 - 1)) <= 185)
+        else if (board[xx][yy] != 0 && board[xx][yy] >= 178 && board[xx][yy] <= 185) //no ally check needed here because of the other if
             addMove(xx, yy, pc_id, 31);
     case 21: // nexus (not implemented)
         break;
@@ -352,7 +352,7 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 23: // summon pillar or petrify
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 23);
-        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!petrify_immune[board[xx][yy] & (2048 - 1)]))
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!petrify_immune[board[xx][yy]/2]))
             addMove(xx, yy, pc_id, 6);
         break;
     case 24: // lightning
@@ -368,7 +368,7 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 27: // null (not yet implemented)
         break;
     case 28: // charm
-        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && isMinion[board[xx][yy] & (2048 - 1)])
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && isMinion[board[xx][yy]/2])
             addMove(xx, yy, pc_id, 29);
         break;
     case 29: // summoner (not implemented)
@@ -444,7 +444,7 @@ void rookForward(int range, int moveType, int piece, int pc_id, int x, int y, in
             addCandidateMove(x, y, x, i, piece, pc_id, moveType);
         if (moveType < 9 && board[x][i] != 0)
         {
-            if (board[x][i] < 2048)
+            if (!transparent[id_board[x][i]])
                 break;
             else
                 continue;
@@ -466,7 +466,7 @@ void rookBackward(int range, int moveType, int piece, int pc_id, int x, int y, i
             addCandidateMove(x, y, x, i, piece, pc_id, moveType);
         if (moveType < 9 && board[x][i] != 0)
         {
-            if (board[x][i] < 2048)
+            if (!transparent[id_board[x][i]])
                 break;
             else
                 continue;
@@ -484,7 +484,7 @@ void rookHorizontal(int range, int moveType, int piece, int pc_id, int x, int y,
 
         if (moveType < 9 && board[i][y] != 0)
         {
-            if (board[i][y] < 2048)
+            if (!transparent[id_board[i][y]])
                 break;
             else
                 continue;
@@ -497,7 +497,7 @@ void rookHorizontal(int range, int moveType, int piece, int pc_id, int x, int y,
             addCandidateMove(x, y, i, y, piece, pc_id, moveType);
         if (moveType < 9 && board[i][y] != 0)
         {
-            if (board[i][y] < 2048)
+            if (!transparent[id_board[i][y]])
                 break;
             else
                 continue;
@@ -537,7 +537,7 @@ void bishopForward(int range, int moveType, int piece, int pc_id, int x, int y, 
             addCandidateMove(x, y, x + i, y + i, piece, pc_id, moveType);
         if (moveType < 9 && board[x + i][y + i] != 0)
         {
-            if (board[x + i][y + i] < 2048)
+            if (!transparent[id_board[x + i][y + i]])
                 break;
             else
                 continue;
@@ -550,7 +550,7 @@ void bishopForward(int range, int moveType, int piece, int pc_id, int x, int y, 
             addCandidateMove(x, y, x - i, y + i, piece, pc_id, moveType);
         if (board[x - i][y + i] != 0)
         {
-            if (moveType < 9 && board[x - i][y + i] < 2048)
+            if (moveType < 9 && !transparent[id_board[x - i][y + i]])
                 break;
             else
                 continue;
@@ -572,7 +572,7 @@ void bishopBackward(int range, int moveType, int piece, int pc_id, int x, int y,
             addCandidateMove(x, y, x + i, y - i, piece, pc_id, moveType);
         if (board[x + i][y - i] != 0)
         {
-            if (board[x + i][y - i] < 2048)
+            if (!transparent[id_board[x + i][y - i]])
                 break;
             else
                 continue;
@@ -586,7 +586,7 @@ void bishopBackward(int range, int moveType, int piece, int pc_id, int x, int y,
             addCandidateMove(x, y, x - i, y - i, piece, pc_id, moveType);
         if (moveType < 9 && board[x - i][y - i] != 0)
         {
-            if (board[x - i][y - i] < 2048)
+            if (!transparent[id_board[x - i][y - i]])
                 break;
             else
                 continue;
@@ -785,8 +785,6 @@ void generateMoves(int pc_id, int x, int y)
 {
     //std::cout<<pc_id<<" "<<x<<" "<<y<<std::endl;
     int piece = pieces[pc_id];
-    if (piece >= 2048)
-        piece -= 2048;
     switch ((piece ^ (piece & 1)))
     {
     case 2: // apprentice
@@ -1748,7 +1746,7 @@ void generateMoves(int pc_id, int x, int y)
         bishop(1, 3, piece, pc_id, x, y);
         bishop(2, 10, piece, pc_id, x, y, 2);
         break;
-    case 410: // Phantasma
+    case 410: // Phantasm
         rook(1, 4, piece, pc_id, x, y);
         bishop(2, 9, piece, pc_id, x, y, 2);
         rook(3, 9, piece, pc_id, x, y, 3);
@@ -3133,7 +3131,7 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id){
 void killPiece(int xx, int yy, int pc_id, int killType=0){
     //std::cout<<"kill piece "<<xx<<" "<<yy<<" "<<pc_id<<std::endl;
     int takingPiece=pieces[pc_id];
-    int capturedPiece=board[xx][yy]&(2048-1);
+    int capturedPiece=board[xx][yy];
     switch(takingPiece&(2048-2)){
         case 34: //bat
         case 36:
@@ -3432,12 +3430,13 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     death[id_board[xx][yy]]=turn;
     id_board[xx][yy]=-1;
 
-    switch(takingPiece&(2048-2)){
+    switch(capturedPiece&(2048-2)){
         case 946: //phoenix
         case 948:
         case 950:
         case 952:
-            summonPiece(xx, yy, takingPiece&(2048-2)+8);
+            if(killType==0)
+                summonPiece(xx, yy, capturedPiece+8);
             break;
     }
     
@@ -3497,7 +3496,7 @@ void pushPiece(int x, int y, int xx, int yy, int pc_id, int dis=3){
             lvx=xx+xdif*i;
             lvy=yy+ydif*i;
         }
-        else if(board[xx+xdif*i][yy+ydif*i]&2048)
+        else if(board[xx+xdif*i][yy+ydif*i]&&transparent[id_board[xx][yy]])
             continue;
         break;
     }
@@ -3515,13 +3514,27 @@ void summonPiece(int xx, int yy, int pieceType){
 
     px[pc_cnt]=xx;
     py[pc_cnt]=yy;
+
+    transparent[pc_cnt]=0;
+
     pc_cnt++;
 
     addPVT(pieceType, xx, yy);
 
+    if(pieceType>=242&&pieceType<250){ //alch
+        alchList[pieceType&1][alchPnt[pieceType&1]++]=pc_cnt-1;
+    }
+
     if(pieceType>=474&&pieceType<482){ //samurai
         samuraiList[pieceType&1][samuraiPnt[pieceType&1]++]=pc_cnt-1;
     }
+
+    if(pieceType>=930&&pieceType<938){ //lust
+        lustList[pieceType&1][lustPnt[pieceType&1]++]=pc_cnt-1;
+    }
+
+    if(pieceType >= 26 && pieceType<34 || pieceType>=106&&pieceType<114 || pieceType>=410 && pieceType<418 || pieceType>=610 && pieceType<618)
+        transparent[pc_cnt-1]=1;
 
     undostack[turn][undo_pnt[turn]][0]=4;
     undostack[turn][undo_pnt[turn]][1]=pc_cnt-1;
@@ -3570,7 +3583,7 @@ void payMorale(int side, int qnt){
 void replacePiece(int xx, int yy, int pc_id, int nPieceType){
     undostack[turn][undo_pnt[turn]][0]=7;
     undostack[turn][undo_pnt[turn]][1]=pc_id;
-    undostack[turn][undo_pnt[turn]][2]=board[xx][yy];
+    undostack[turn][undo_pnt[turn]][2]=board[xx][yy]+2048*transparent[pc_id];
     undostack[turn][undo_pnt[turn]][3]=pmorale[pc_id];
     undo_pnt[turn]++;
 
@@ -3583,6 +3596,9 @@ void replacePiece(int xx, int yy, int pc_id, int nPieceType){
     board[xx][yy]=nPieceType;
     pmorale[pc_id]=pieceValue[nPieceType/2];
     pieces[pc_id]=nPieceType;
+
+    if(nPieceType>=106 && nPieceType<114)
+        transparent[pc_id]=1;
 }
 
 void increaseValue(int pc_id, int amount){
@@ -3698,7 +3714,7 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
             replacePiece(xx, yy, pc_id, pieces[pc_id]-968);
             break;
         case 26: //envy
-            replacePiece(px[pc_id], py[pc_id], pc_id, (board[px[pc_id]][py[pc_id]]&(2048-1))^1);
+            replacePiece(px[pc_id], py[pc_id], pc_id, board[px[pc_id]][py[pc_id]]^1);
             break;
         case 27: //gravity
             break;
@@ -3896,6 +3912,9 @@ void unmakeMoves(int tur){
                 int pc = undostack[tur][i][2];
                 int oval= undostack[tur][i][3];
 
+                transparent[pc_id]=(pc&2048);
+                pc&=2047;
+
                 removePVT(pieces[pc_id], px[pc_id], py[pc_id]);
 
                 morale[pieces[pc_id]&1]-=pmorale[pc_id];
@@ -4048,7 +4067,7 @@ void endOfTurnTriggers(int side){
 
     for(int i=0; i<lustPnt[side]; i++)
     {
-        if(death[lustList[side][i]])
+        if(death[lustList[side][i]]||pieces[i]<930||pieces[i]>=938)
             continue;
         int x = px[lustList[side][i]];
         int y = py[lustList[side][i]];
@@ -4225,7 +4244,7 @@ int getEncoding(std::string name)
         res = 394;
     else if (name == "Paladin")
         res = 402;
-    else if (name == "Phantasma")
+    else if (name == "Phantasm")
         res = 410;
     else if (name == "Pikeman")
         res = 418;
@@ -4428,7 +4447,7 @@ void loadPosition(std::string in)
 }
 
 
-std::string names[134] = {"Apprentice","Archer","Axman","Banshee","Bat","Bishop","Bomber","Dryad","Duelist","NA","FireBall","Frog","FrostMage","Ghost","Guardian","Hoplite","Knight","Militia","Pawn","Penguin","PoisonMage","Shieldsman","Skeleton","Slime","Spearman","Spider","Swordsman","Tiger","Warrior","WindMage","Alchemist","Arachnid","Basilisk","Berserker","Crusader","NA2","Dove","Drake","Fencer","NA3","FireMage","FrostMephit","GiantSlime","Gnome","Hostage","Hydromancer","Legionary","MageTower","Necromancer","Nexus","Paladin","Phantasma","Pikeman","Portal","Prince","Princess","Pyromancer","Ranger","Rook","Samurai","Snake","StoneMage","Sylph","Templar","ThunderMage","Toad","Wisp","AirElemental","ArchBishop","Beacon","Behemoth","Butterfly","Chastity","Demon","Dragon","EarthElemental","Ghast","Harpy","HauntedArmor","NA4","LifeStone","Medusa","Mercenary","Minotaur","Ninja","NullMage","Patience","Phalanx","NA5","Queen","Reaver","Salamander","SoulFlare","Summoner","Temperance","Tombstone","Undine","Valkyrie","Wizard","Angel","Antimage","Aquarius","Comet","Enchantress","Envy","FireElemental","Fortress","Gemini","GeminiTwin","Gluttony","GravityMage","Greed","Illusionist","Illusion","Lich","Lilith","Lust","MoonFox","Phoenix","PheonixEgg","Pride","RoyalGuard","Siren","SoulKeeper","Taurus","Vampire","VoidMage","WaterElemental","Wrath","King", "Sapling", "Tree", "BonePile", "StonePillar"};
+std::string names[134] = {"Apprentice","Archer","Axman","Banshee","Bat","Bishop","Bomber","Dryad","Duelist","NA","FireBall","Frog","FrostMage","Ghost","Guardian","Hoplite","Knight","Militia","Pawn","Penguin","PoisonMage","Shieldsman","Skeleton","Slime","Spearman","Spider","Swordsman","Tiger","Warrior","WindMage","Alchemist","Arachnid","Basilisk","Berserker","Crusader","NA2","Dove","Drake","Fencer","NA3","FireMage","FrostMephit","GiantSlime","Gnome","Hostage","Hydromancer","Legionary","MageTower","Necromancer","Nexus","Paladin","Phantasm","Pikeman","Portal","Prince","Princess","Pyromancer","Ranger","Rook","Samurai","Snake","StoneMage","Sylph","Templar","ThunderMage","Toad","Wisp","AirElemental","ArchBishop","Beacon","Behemoth","Butterfly","Chastity","Demon","Dragon","EarthElemental","Ghast","Harpy","HauntedArmor","NA4","LifeStone","Medusa","Mercenary","Minotaur","Ninja","NullMage","Patience","Phalanx","NA5","Queen","Reaver","Salamander","SoulFlare","Summoner","Temperance","Tombstone","Undine","Valkyrie","Wizard","Angel","Antimage","Aquarius","Comet","Enchantress","Envy","FireElemental","Fortress","Gemini","GeminiTwin","Gluttony","GravityMage","Greed","Illusionist","Illusion","Lich","Lilith","Lust","MoonFox","Phoenix","PheonixEgg","Pride","RoyalGuard","Siren","SoulKeeper","Taurus","Vampire","VoidMage","WaterElemental","Wrath","King", "Sapling", "Tree", "BonePile", "StonePillar"};
 std::string getName(int piece){
     bool black = (piece&1)==1;
     if(piece&1==1)
