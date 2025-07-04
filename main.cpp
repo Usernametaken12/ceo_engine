@@ -865,6 +865,84 @@ void fortress(int range, int piece, int pc_id, int x, int y){
     }
 }
 
+void archbishop(int range, int piece, int pc_id, int x, int y){
+    if(y+1<8 && board[x][y+1]==0){
+        addCandidateMove(x, y, x, y+1, piece, pc_id, 1);
+        for(int i=1; i<=std::min(range, std::min(7-(y+1), 7-x)); i++){
+            addCandidateMove(x,y,x+i, y+1+i, piece, pc_id, 4);
+            if(board[x+i][y+1+i]==0 || transparent[id_board[x+i][y+1+i]])
+                continue;
+            else
+                break;
+        }
+
+        for(int i=1; i<=std::min(range, std::min(7-(y+1), x)); i++){
+            addCandidateMove(x,y,x-i, y+1+i, piece, pc_id, 4);
+            if(board[x-i][y+1+i]==0 || transparent[id_board[x-i][y+1+i]])
+                continue;
+            else
+                break;
+        }
+    }
+
+    if(y-1>=0 && board[x][y-1]==0){
+        addCandidateMove(x, y, x, y-1, piece, pc_id, 1);
+        for(int i=1; i<=std::min(range, std::min(y-1, 7-x)); i++){
+            addCandidateMove(x, y, x+i, y-1-i, piece, pc_id, 4);
+            if(board[x+i][y-1-i]==0 || transparent[id_board[x+i][y-1-i]])
+                continue;
+            else
+                break;
+        }
+
+        for(int i=1; i<=std::min(range, std::min(y-1, x)); i++){
+            addCandidateMove(x,y,x-i, y-1-i, piece, pc_id, 4);
+            if(board[x-i][y-1-i]==0 || transparent[id_board[x-i][y-1-i]])
+                continue;
+            else
+                break;
+        }
+    }
+
+    if(x+1<8 && board[x+1][y]==0){
+        addCandidateMove(x, y, x+1, y, piece, pc_id, 1);
+        for(int i=1; i<=std::min(range, std::min(7-y, 7-(x+1))); i++){
+            addCandidateMove(x, y, x+1+i, y+i, piece, pc_id, 4);
+            if(board[x+1+i][y+i]==0 || transparent[id_board[x+1+i][y+i]])
+                continue;
+            else
+                break;
+        }
+
+        for(int i=1; i<=std::min(range, std::min(y, 7-(x+1))); i++){
+            addCandidateMove(x,y,x+1+i, y-i, piece, pc_id, 4);
+            if(board[x+1+i][y-i]==0 || transparent[id_board[x+i+1][y-i]])
+                continue;
+            else
+                break;
+        }
+    }
+
+    if(x-1>=0 && board[x-1][y]==0){
+        addCandidateMove(x, y, x-1, y, piece, pc_id, 1);
+        for(int i=1; i<=std::min(range, std::min(7-y, x-1)); i++){
+            addCandidateMove(x,y,x-1-i, y+i, piece, pc_id, 4);
+            if(board[x-i-1][y+i]==0 || transparent[id_board[x-i-1][y+i]])
+                continue;
+            else
+                break;
+        }
+
+        for(int i=1; i<=std::min(range, std::min(y, x-1)); i++){
+            addCandidateMove(x,y,x-1-i, y-i, piece, pc_id, 4);
+            if(board[x-i-1][y-i]==0 || transparent[id_board[x-i-1][y-i]])
+                continue;
+            else
+                break;
+        }
+    }
+}
+
 
 void generateMoves(int pc_id, int x, int y)
 {
@@ -2111,12 +2189,20 @@ void generateMoves(int pc_id, int x, int y)
         bishop(5, 6, piece, pc_id, x, y);
         break;
     case 546: // Archbishop
+        archbishop(2, piece, pc_id, x, y);
+        bishop(3,3, piece, pc_id, x, y);
         break;
     case 548:
+        archbishop(3, piece, pc_id, x, y);
+        bishop(4,3, piece, pc_id, x, y);
         break;
     case 550:
+        archbishop(4, piece, pc_id, x, y);
+        bishop(5,3, piece, pc_id, x, y);
         break;
     case 552:
+        archbishop(5, piece, pc_id, x, y);
+        bishop(6,3, piece, pc_id, x, y);
         break;
     case 554: // Beacon
         break;
@@ -4914,7 +5000,7 @@ int main()
     }*/
     //std::cout<<pc_cnt<<std::endl;
     while(true){
-        //printState();
+        printState();
         auto start = std::chrono::system_clock::now();
         std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 7, 0)<<std::endl;
         auto end = std::chrono::system_clock::now();
