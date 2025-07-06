@@ -54,7 +54,8 @@ int position_bonus[2] = {};
 
 int piece_type[1050] = {100,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,2,2,2,2,3,3,3,3,2,2,2,2,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,3,3,3,3,2,2,2,2,2,2,2,2,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,2,2,2,2,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,5,6,7,8,1,1,1,1,1,1,1,1,3,3,3,3,5,5,6,7,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,2,2,2,2,1,1,1,1,3,3,3,3,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,3,3,3,3,1,1,1,1,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,5,6,6,7,2,2,2,2,3,3,3,3,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,6,7,8,8,3,3,3,3,1,1,1,1,2,2,2,2,1,1,1,1,3,3,3,3,3,3,3,3,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0,0};
 
-int piece_square_tables[11][8][8] = {    
+int piece_square_tables[11][8][8] =
+ {    
     {
         {0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0},
@@ -182,7 +183,7 @@ const int MAX_DEPTH = 150;
 //int alpha[MDEPTH + 1];
 //int beta[MDEPTH + 1];
 
-
+//(x,y) --> (y, x) --> (7-y, x)
 void init()
 {
     /*for (int i = 0; i <= MDEPTH; i++)
@@ -193,6 +194,11 @@ void init()
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
             id_board[i][j] = -1;
+    for(int k=0; k<11; k++)
+        for(int x=0; x<8; x++)
+            for(int y=0; y<8; y++){
+                std::swap(piece_square_tables[k][x][y], piece_square_tables[k][7-y][x]);
+            }
 }
 
 int candidateMoveStack[150][400][4] = {0};
@@ -3267,11 +3273,11 @@ void generateMoves(int pc_id, int x, int y)
 }
 
 void addPVT(int pc, int x, int y){
-    position_bonus[pc&1]+=piece_square_tables[piece_type[pc/2]][x][y];
+    position_bonus[pc&1]+=piece_square_tables[piece_type[pc/2]][x][((pc&1))*7+(1-2*(pc&1))*y];
 }
 
 void removePVT(int pc, int x, int y){
-    position_bonus[pc&1]-=piece_square_tables[piece_type[pc/2]][x][y];
+    position_bonus[pc&1]-=piece_square_tables[piece_type[pc/2]][x][((pc&1))*7+(1-2*(pc&1))*y];
 }
 
 /*
@@ -4802,7 +4808,7 @@ int moveScore(int mnum){
         case 31:
             return -100;
         case 32:
-            return 500;
+            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100;
         default:
             throw std::invalid_argument( "unexpected move type" ); 
     }
@@ -4839,15 +4845,20 @@ int static_evaluation(int side){
     return (morale[0]-morale[1])*100 + (position_bonus[0]-position_bonus[1]);
 }
 
+long long quiesent_nodes=0;
 int quiesence(int alpha, int beta, int side)
 {
-    ++nodes;
-    //printState();
-    if (morale[0] == 0)
-        return morale[1] == 0 ? 0 : -1000000;
-    if (morale[1] == 0)
+    ++quiesent_nodes;
+    if (morale[0] <= 0)
+        return morale[1] <= 0 ? 0 : -1000000;
+    if (morale[1] <= 0)
         return 1000000;
 
+    if(side==0&&static_evaluation(side)>=beta)
+        return beta;
+    else if(side==1&&static_evaluation(side)<=alpha)
+        return alpha;
+    
     candidate_pointer[turn]=0;
     for(int i=0; i<pc_cnt; i++){
         if((pieces[i]&1)==side&&!death[i])
@@ -4855,17 +4866,19 @@ int quiesence(int alpha, int beta, int side)
     }
 
     int best = 1000000*(-1+2*side);
-    if(side==0)
+    /*if(side==0)
         best=alpha;
     else
         best=beta;
+    */
 
     int bm =-1;
     int res=-1;
     quickSort();
     for(int j=0; j<candidate_pointer[turn]; j++){
-        if((quicksortArray[turn][j]>>8)<2*agrobonus-1000)
+        if(((quicksortArray[turn][j]>>8)-agrobonus)<agrobonus-3000){
             break;
+        }
         int i = quicksortArray[turn][j]&((1<<8)-1);
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);
@@ -4905,12 +4918,11 @@ int move_chosen[4]={};
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
     ++nodes;
-    if (morale[0] == 0)
-        return morale[1] == 0 ? 0 : -1000000;
-    if (morale[1] == 0)
+    if (morale[0] <= 0)
+        return morale[1] <= 0 ? 0 : -1000000;
+    if (morale[1] <= 0)
         return 1000000;
     if (0 == mdepth){
-        //std::cout<<"BEGIN"<<std::endl;
         return quiesence(alpha, beta, side);
     }
     candidate_pointer[turn]=0;
@@ -4941,7 +4953,6 @@ int evaluate(int alpha, int beta, int mdepth, int side)
     
         --turn;
         unmakeMoves(turn);
-
         if(!side){
             best = std::max(best, res);
             if(best==res)
@@ -5008,22 +5019,22 @@ int main()
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
         std::cout << "elapsed time: " << elapsed_seconds.count() << "s"
         << std::endl;
-        std::cout << "nodes: "<<nodes<<std::endl;
+        std::cout << "normal nodes: "<<nodes<<" quiesent nodes: "<<quiesent_nodes<<std::endl;
         break;
-        /*printChosenMove();
-        makeChosenMove();
-        //printState();
-        endOfTurnTriggers(0);
-        printState();
-        turn++;
-        start_turn++;
 
+        printChosenMove();
+        makeChosenMove();
+        endOfTurnTriggers(0);
+        start_turn++;
+        turn++;
+        printState();
+        printChosenMove();
         int xx, yy, id, mt;
         std::cin>>xx>>yy>>id>>mt;
         makeMove(xx, yy, id, mt);
         endOfTurnTriggers(1);
         turn++;
-        start_turn++;*/
+        start_turn++;
     }
     return 1;
 }
