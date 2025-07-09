@@ -439,7 +439,7 @@ void rookBackward(int range, int moveType, int piece, int pc_id, int x, int y, i
 
 void rookForward(int range, int moveType, int piece, int pc_id, int x, int y, int start = 1)
 {
-    if (piece & 1 == 1)
+    if ((piece & 1) == 1)
     {
         rookBackward(range, moveType, piece - 1, pc_id, x, y, start);
         return;
@@ -462,7 +462,7 @@ void rookForward(int range, int moveType, int piece, int pc_id, int x, int y, in
 
 void rookBackward(int range, int moveType, int piece, int pc_id, int x, int y, int start = 1)
 {
-    if (piece & 1 == 1)
+    if ((piece & 1) == 1)
     {
         rookForward(range, moveType, piece - 1, pc_id, x, y, start);
         return;
@@ -533,7 +533,7 @@ void bishopBackward(int range, int moveType, int piece, int pc_id, int x, int y,
 
 void bishopForward(int range, int moveType, int piece, int pc_id, int x, int y, int start = 1)
 {
-    if (piece & 1 == 1)
+    if ((piece & 1) == 1)
     {
         bishopBackward(range, moveType, piece - 1, pc_id, x, y, start);
         return;
@@ -568,7 +568,7 @@ void bishopForward(int range, int moveType, int piece, int pc_id, int x, int y, 
 
 void bishopBackward(int range, int moveType, int piece, int pc_id, int x, int y, int start = 1)
 {
-    if (piece & 1 == 1)
+    if ((piece & 1) == 1)
     {
         bishopForward(range, moveType, piece - 1, pc_id, x, y, start);
         return;
@@ -645,7 +645,7 @@ void knightBackward(int moveType, int piece, int pc_id, int x, int y);
 
 void knightForward(int moveType, int piece, int pc_id, int x, int y)
 {
-    if (piece & 1 == 1)
+    if ((piece & 1) == 1)
     {
         knightBackward(moveType, piece - 1, pc_id, x, y);
         return;
@@ -659,7 +659,7 @@ void knightForward(int moveType, int piece, int pc_id, int x, int y)
 
 void knightBackward(int moveType, int piece, int pc_id, int x, int y)
 {
-    if (piece & 1 == 1)
+    if ((piece & 1) == 1)
     {
         knightForward(moveType, piece - 1, pc_id, x, y);
         return;
@@ -715,7 +715,7 @@ void mancer(int moveType, int piece, int pc_id, int x, int y){
 void mancerOnlyBackward(int moveType, int piece, int pc_id, int x, int y);
 
 void mancerOnlyForward(int moveType, int piece, int pc_id, int x, int y){
-    if(moveType&1==1)
+    if((piece&1)==1)
         return mancerOnlyBackward(moveType, piece-1, pc_id, x, y);
     for (int i = 0; i < 2; i++)
     {
@@ -725,7 +725,7 @@ void mancerOnlyForward(int moveType, int piece, int pc_id, int x, int y){
 }
 
 void mancerOnlyBackward(int moveType, int piece, int pc_id, int x, int y){
-    if(moveType&1==1)
+    if((piece&1)==1)
         return mancerOnlyForward(moveType, piece-1, pc_id, x, y);
     for (int i = 6; i < 8; i++)
     {
@@ -737,7 +737,7 @@ void mancerOnlyBackward(int moveType, int piece, int pc_id, int x, int y){
 void mancerBackward(int moveType, int piece, int pc_id, int x, int y);
 
 void mancerForward(int moveType, int piece, int pc_id, int x, int y){
-    if(moveType&1==1)
+    if((piece&1)==1)
         return mancerBackward(moveType, piece-1, pc_id, x, y);
     for (int i = 0; i < 4; i++)
     {
@@ -747,7 +747,7 @@ void mancerForward(int moveType, int piece, int pc_id, int x, int y){
 }
 
 void mancerBackward(int moveType, int piece, int pc_id, int x, int y){
-    if(moveType&1==1)
+    if((piece&1)==1)
         return mancerForward(moveType, piece-1, pc_id, x, y);
     for (int i = 4; i < 8; i++)
     {
@@ -3296,7 +3296,7 @@ void payMorale(int side, int qnt);
 void replacePiece(int xx, int yy, int pc_id, int nPieceType);
 void increaseValue(int pc_id, int amount);
 
-int undostack[200][20][6] = {};
+int undostack[200][200][6] = {};
 int undo_pnt[200] = {};
 
 void moveToSquare(int x, int y, int xx, int yy, int pc_id){
@@ -4160,7 +4160,7 @@ void unmakeMoves(int tur){
             case 9:
             {
                 int pc_id = undostack[tur][i][1];
-                long long ostatus= (undostack[tur][i][2]+0LL)<<30+undostack[tur][i][3];
+                long long ostatus= ((undostack[tur][i][2]+0LL)<<30)+undostack[tur][i][3];
                 status[pc_id]=ostatus;
                 break;
             }
@@ -4343,7 +4343,7 @@ void endOfTurnTriggers(int side){
     side^=1;
     for(int i=0; i<samuraiPnt[side]; i++){
         int id=samuraiList[side][i];
-        if(death[id])
+        if(death[id]||pieces[id]<474||pieces[id]>481)
             continue;
         if(board[px[id]][py[id]+1-2*side]!=0&&(board[px[id]][py[id]+1-2*side]&1)!=side)
             makeMove(px[id], py[id]+1-2*side, id, 2);
@@ -4682,7 +4682,7 @@ void loadPosition(std::string in)
 std::string names[134] = {"Apprentice","Archer","Axman","Banshee","Bat","Bishop","Bomber","Dryad","Duelist","NA","FireBall","Frog","FrostMage","Ghost","Guardian","Hoplite","Knight","Militia","Pawn","Penguin","PoisonMage","Shieldsman","Skeleton","Slime","Spearman","Spider","Swordsman","Tiger","Warrior","WindMage","Alchemist","Arachnid","Basilisk","Berserker","Crusader","NA2","Dove","Drake","Fencer","NA3","FireMage","FrostMephit","GiantSlime","Gnome","Hostage","Hydromancer","Legionary","MageTower","Necromancer","Nexus","Paladin","Phantasm","Pikeman","Portal","Prince","Princess","Pyromancer","Ranger","Rook","Samurai","Snake","StoneMage","Sylph","Templar","ThunderMage","Toad","Wisp","AirElemental","ArchBishop","Beacon","Behemoth","Butterfly","Chastity","Demon","Dragon","EarthElemental","Ghast","Harpy","HauntedArmor","NA4","LifeStone","Medusa","Mercenary","Minotaur","Ninja","NullMage","Patience","Phalanx","NA5","Queen","Reaver","Salamander","SoulFlare","Summoner","Temperance","Tombstone","Undine","Valkyrie","Wizard","Angel","Antimage","Aquarius","Comet","Enchantress","Envy","FireElemental","Fortress","Gemini","GeminiTwin","Gluttony","GravityMage","Greed","Illusionist","Illusion","Lich","Lilith","Lust","MoonFox","Phoenix","PheonixEgg","Pride","RoyalGuard","Siren","SoulKeeper","Taurus","Vampire","VoidMage","WaterElemental","Wrath","King", "Sapling", "Tree", "BonePile", "StonePillar"};
 std::string getName(int piece){
     bool black = (piece&1)==1;
-    if(piece&1==1)
+    if((piece&1)==1)
         piece--;
     piece-=2;
     std::string name = names[piece/8];
@@ -4715,7 +4715,7 @@ void recalculate_evaluation(){
 int static_evaluation(int side);
 void printState(){
 
-    std::cout<<"White morale: "<<morale[0]<<" "<<"Black morale: "<<morale[1]<<std::endl;
+    /*std::cout<<"White morale: "<<morale[0]<<" "<<"Black morale: "<<morale[1]<<std::endl;
     std::cout<<static_evaluation(turn&1)<<std::endl;
     for(int y=7; y>=0; y--){
         for(int x=0; x<=7; x++){
@@ -4730,7 +4730,7 @@ void printState(){
     for(int i=0; i<pc_cnt; i++)
         std::cout<<"("<<px[i]<<", "<<py[i]<<") ";
     std::cout<<std::endl;
-    std::cout<<std::endl;
+    std::cout<<std::endl;*/
 }
 
 void printCandidateMoves(){
@@ -4815,30 +4815,35 @@ int moveScore(int mnum){
     return -1;
 }
 
-int quicksortArray[200][200] = {};
-void selectionSort(int start){
-    int best = -1;
-    int score = -1000000;
-    for(int i=start; i<candidate_pointer[turn]; i++){
-        int res = moveScore(i);
-        if(res>score){
-            best = i;
-            score=res;
-        }
-    }
-    std::swap(candidateMoveStack[turn][start][0], candidateMoveStack[turn][best][0]);
-    std::swap(candidateMoveStack[turn][start][1], candidateMoveStack[turn][best][1]);
-    std::swap(candidateMoveStack[turn][start][2], candidateMoveStack[turn][best][2]);
-    std::swap(candidateMoveStack[turn][start][3], candidateMoveStack[turn][best][3]);
+int selectionSortArray[200][200] ={};
+
+void initSelectionSort(){
+    for(int i=0; i<candidate_pointer[turn]; i++)
+        selectionSortArray[turn][i]= moveScore(i);
 }
 
+int selectionSort(){
+    int best = -1;
+    int score = -1000000;
+    for(int i=0; i<candidate_pointer[turn]; i++){
+        if(selectionSortArray[turn][i]>score){
+            best = i;
+            score = selectionSortArray[turn][i];
+        }
+    }
+    if(best==-1)
+        throw std::exception();
+    return best;
+}
+
+/*int quicksortArray[200][200] = {};
 void quickSort(){
     for(int i=0; i<candidate_pointer[turn]; i++){
         quicksortArray[turn][i] = ((moveScore(i)+agrobonus)<<8)+i;
     }
     
     std::sort(std::begin(quicksortArray[turn]), quicksortArray[turn] + candidate_pointer[turn], std::greater<int>());
-}
+}*/
 
 long long nodes=0;
 int static_evaluation(int side){
@@ -4866,21 +4871,23 @@ int quiesence(int alpha, int beta, int side)
     }
 
     int best = 1000000*(-1+2*side);
-    /*if(side==0)
-        best=alpha;
-    else
-        best=beta;
-    */
 
     int bm =-1;
     int res=-1;
-    quickSort();
+    initSelectionSort();
     for(int j=0; j<candidate_pointer[turn]; j++){
-        if(((quicksortArray[turn][j]>>8)-agrobonus)<agrobonus-3000){
+        
+        
+        int i = selectionSort();
+
+        if(selectionSortArray[turn][i]<agrobonus-3000){
             break;
         }
-        int i = quicksortArray[turn][j]&((1<<8)-1);
+
+        selectionSortArray[turn][i]=-10*agrobonus;
+        //std::cout<<"QMOVE "<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
+        printState();
         endOfTurnTriggers(side);
         ++turn;
 
@@ -4890,8 +4897,10 @@ int quiesence(int alpha, int beta, int side)
             res = quiesence(best, beta, side^1);
     
         --turn;
+        //std::cout<<"Q UNMAKE "<<std::endl;
         unmakeMoves(turn);
-
+        printState();
+        
         if(!side){
             best = std::max(best, res);
             if(best==res)
@@ -4907,6 +4916,8 @@ int quiesence(int alpha, int beta, int side)
                 break;
         }
     }
+
+
     if(bm==-1)
         return static_evaluation(side);
     return best;
@@ -4923,7 +4934,12 @@ int evaluate(int alpha, int beta, int mdepth, int side)
     if (morale[1] <= 0)
         return 1000000;
     if (0 == mdepth){
-        return quiesence(alpha, beta, side);
+        //<<"QUIESENSE BEGIN current state:"<<std::endl;
+        printState();
+        int res = quiesence(alpha, beta, side);
+        //std::cout<<"QUIESENSE EXXIT current state:"<<std::endl;
+        printState();
+        return res;
     }
     candidate_pointer[turn]=0;
     for(int i=0; i<pc_cnt; i++){
@@ -4939,20 +4955,32 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
     int bm =-1;
     int res=-1;
-    quickSort();
+
+    initSelectionSort();
     for(int j=0; j<candidate_pointer[turn]; j++){
-        int i = quicksortArray[turn][j]&((1<<8)-1);
+        int i = selectionSort();
+        selectionSortArray[turn][i]=-10*agrobonus;
+
+        //std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);
+        printState();
+        if(morale[1]>100)
+            throw std::exception();
+    
         ++turn;
-
         if(side)
             res = evaluate(alpha, best, mdepth-1, side^1);
         else
             res = evaluate(best, beta, mdepth-1, side^1);
-    
+        
         --turn;
+        //std::cout<<"UNMAKE"<<std::endl;
         unmakeMoves(turn);
+        printState();
+        if(morale[1]>100)
+            throw std::exception();
+    
         if(!side){
             best = std::max(best, res);
             if(best==res)
@@ -5013,7 +5041,7 @@ int main()
     while(true){
         printState();
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 7, 0)<<std::endl;
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 6, 0)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
