@@ -4653,13 +4653,18 @@ void loadPosition(std::string in)
 {
     std::vector<std::string> res;
     int pos = 0;
-    while (pos < in.size())
+    while (true)
     {
         pos = in.find(",");
+        if(pos==std::string::npos)
+            break;
         res.push_back(in.substr(0, pos));
         in.erase(0, pos + 1);
     }
+    res.push_back(in);
+    int version = res[0]=="56" ? 56 : res[0]=="57" ? 57 : 54;
     // start at the 38th slice
+    int begin = version==56 ? 37 : 37;
     for(int i=37; i<37+64; i++){
         if(res[i]=="")
             continue;
@@ -4721,15 +4726,18 @@ void printState(){
     for(int y=7; y>=0; y--){
         for(int x=0; x<=7; x++){
             if(board[x][y]==0)
-                std::cout<<"----------------- ";
-            else
-                std::cout<<getName(board[x][y])<<"("<<id_board[x][y]<<")["<<pmorale[id_board[x][y]]<<"]{"<<piece_type[board[x][y]/2]<<": "<<piece_square_tables[piece_type[board[x][y]/2]][board[x][y]&1 ? y : 7-y][x]<<"} ";
+                std::cout<<"-------("<<x<<","<<y<<")------- ";
+            else{
+                std::cout<<getName(board[x][y])<<"("<<id_board[x][y]<<") ";//["<<pmorale[id_board[x][y]]<<"]{"<<piece_type[board[x][y]/2]<<": "<<piece_square_tables[piece_type[board[x][y]/2]][board[x][y]&1 ? y : 7-y][x]<<"} ";
+                if(getName(board[x][y]).size()<16)
+                    std::cout<<std::string(16-getName(board[x][y]).size()-(id_board[x][y]>=10 ? 1 : 0), ' ');
+            }
         }
         std::cout<<std::endl;
     }
 
-    for(int i=0; i<pc_cnt; i++)
-        std::cout<<"("<<px[i]<<", "<<py[i]<<") ";
+    //for(int i=0; i<pc_cnt; i++)
+    //    std::cout<<"("<<px[i]<<", "<<py[i]<<") ";
     std::cout<<std::endl;
     std::cout<<std::endl;
 }
@@ -5024,6 +5032,8 @@ void makeChosenMove(){
     makeMove(move_chosen[0], move_chosen[1], move_chosen[2], move_chosen[3]);
 }
 
+
+const bool enterPos=true;
 int main()
 {
     init();
@@ -5034,21 +5044,15 @@ int main()
     //loadPosition("54,whitename,blackname,2500,2500,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Pawn,,,,,Drake,Warrior,Bishop,Pawn,,,,,Drake,Warrior,Wizard,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Warrior,Knight,Militia,,,,,Drake,King,Knight,Militia,,,,,Drake,Demon,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0");
     //loadPosition("56,Usernametaken12#5978,loading,3000,0,v56_replay,152,20,14,7,7,7,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Queen3,Drake,,,,,Axeman,King,Berserker,Drake,,,,,Axeman,Knight,Knight,Samurai,,,,,Samurai,Demon,Warrior3,Samurai,,,,,Samurai,Warrior3,Warrior3,Samurai,,,,,Samurai,Warrior3,Demon,Samurai,,,,,Samurai,Knight,Knight,Axeman,,,,,Drake,Berserker,King,Axeman,,,,,Drake,Queen3,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,43");
     //loadPosition("57,Player1,Player2,2000,2000,v57_scenario,1,1,1,1,1,1,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Spearman,,,,,Drake,Demon,Bishop,Spearman,,,,,Drake,King,Rook,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Ranger,Knight,Spearman,,,,,Drake,AirElemental,Knight,Spearman,,,,,Drake,Pyromancer,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0");
-    loadPosition("56,devbot#9202,PrivateAccount,0,2000,v56_replay,129,16,31,30,28,24,0,45,67,30,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Spearman,,,,,Drake,Demon,Bishop,Spearman,,,,,Drake,King,Rook,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Ranger,Knight,Spearman,,,,,Drake,AirElemental,Knight,Spearman,,,,,Drake,Pyromancer,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,54,46");
-    /*for(int i=0; i<pc_cnt; i++)
-        generateMoves(i, px[i], py[i]);
-    printCandidateMoves();
-    //makeMove(0, 2, 2, 1);
-    printState();
-    while(true){
-        int xx, yy, id, mt;
-        std::cin>>xx>>yy>>id>>mt;
-        makeMove(xx, yy, id, mt);
-        printState();
-        unmakeMoves(turn);
-        printState();
-    }*/
-    //std::cout<<pc_cnt<<std::endl;
+    //loadPosition("56,devbot#9202,PrivateAccount,0,2000,v56_replay,129,16,31,30,28,24,0,45,67,30,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Spearman,,,,,Drake,Demon,Bishop,Spearman,,,,,Drake,King,Rook,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Ranger,Knight,Spearman,,,,,Drake,AirElemental,Knight,Spearman,,,,,Drake,Pyromancer,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,54,46");
+    //loadPosition("54,whitename,blackname,2500,2500,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,,Drake,,,,,Drake,Pyromancer,,Drake,,,,,Drake,AirElemental,,Samurai,,,,,Samurai,Ranger,,Samurai,,,,,Samurai,Knight,,Samurai,,,,,Samurai,Knight,Warrior,Samurai,,,,,Samurai,Warrior,King,Drake,,,,,Drake,King,,Drake,,,,,Drake,Demon,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0");
+    
+    if(enterPos){
+        std::string position;
+        std::cin>>position;
+        loadPosition(position);
+    }
+
     while(true){
         printState();
         auto start = std::chrono::system_clock::now();
