@@ -2,8 +2,9 @@
 #include <string.h>
 #include <bits/stdc++.h>
 
-//(0, 0) is bottom left corner of board
+const bool DEBUG = false;
 
+//(0, 0) is bottom left corner of board
 int board[8][8] = {0}; //included in hash
 int id_board[8][8]; //included in hash
 
@@ -395,7 +396,8 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 33: // comet suicide (not implemented)
         break;
     case 34: // enchant
-        addMove(xx, yy, pc_id, 11);
+        if(((board[xx][yy]^pieces[pc_id]) & 1)==0)
+            addMove(xx, yy, pc_id, 11);
     case 35: // transform into bat
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 25);
@@ -2823,42 +2825,42 @@ void generateMoves(int pc_id, int x, int y)
         break;
     case 824:
         break;
-    case 826: // Envy
-        rook(1, 3, piece, pc_id, x, y);
-        valk(47, piece, pc_id, x, y);
+    case 826: // Enchantress
+        queen(1, 1, piece, pc_id, x, y);
+        queen(2, 34, piece, pc_id, x, y, 2);
         break;
     case 828:
         rook(1, 3, piece, pc_id, x, y);
         bishop(1, 1, piece, pc_id, x, y);
-        valk(47, piece, pc_id, x, y);
+        queen(2, 34, piece, pc_id, x, y, 2);
         break;
     case 830:
         queen(1, 3, piece, pc_id, x, y);
-        valk(47, piece, pc_id, x, y);
+        queen(2, 34, piece, pc_id, x, y, 2);
         break;
     case 832:
         queen(1, 3, piece, pc_id, x, y);
-        queen(2, 1, piece, pc_id, x, y, 2);
-        rook(3, 47, piece, pc_id, x, y, 3);
-        valk(47, piece, pc_id, x, y);
-        break;
-    case 834: // Enchantress
-        queen(1, 1, piece, pc_id, x, y);
         queen(2, 34, piece, pc_id, x, y, 2);
+        knight(34, piece, pc_id, x, y);
+        break;
+    case 834: // Envy
+        rook(1, 3, piece, pc_id, x, y);
+        valk(47, piece, pc_id, x, y);
         break;
     case 836:
         rook(1, 3, piece, pc_id, x, y);
         bishop(1, 1, piece, pc_id, x, y);
-        queen(2, 34, piece, pc_id, x, y, 2);
+        valk(47, piece, pc_id, x, y);
         break;
     case 838:
         queen(1, 3, piece, pc_id, x, y);
-        queen(2, 34, piece, pc_id, x, y, 2);
+        valk(47, piece, pc_id, x, y);
         break;
     case 840:
         queen(1, 3, piece, pc_id, x, y);
-        queen(2, 34, piece, pc_id, x, y, 2);
-        knight(34, piece, pc_id, x, y);
+        queen(2, 1, piece, pc_id, x, y, 2);
+        rook(3, 47, piece, pc_id, x, y, 3);
+        valk(47, piece, pc_id, x, y);
         break;
     case 842: // Fire Elemental
         rook(1, 3, piece, pc_id, x, y);
@@ -4201,7 +4203,6 @@ void unmakeMoves(int tur){
                 bool trans = (undostack[turn][undo_pnt[turn]][2]&2048);
                 int side= (undostack[turn][undo_pnt[turn]][2]&1);
                 int omorale = undostack[turn][undo_pnt[turn]][3];
-                undo_pnt[turn]++;
 
                 nulled[pc_id]=0;
                 transparent[pc_id]=trans;
@@ -4895,10 +4896,16 @@ int quiesence(int alpha, int beta, int side)
         }
 
         selectionSortArray[turn][i]=-10*agrobonus;
-        //std::cout<<"QMOVE "<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
+        
+        if(DEBUG)
+            std::cout<<"QMOVE "<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
+        
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);
-        //printState();
+        
+        if(DEBUG)
+            printState();
+        
         ++turn;
 
         if(side)
@@ -4907,8 +4914,11 @@ int quiesence(int alpha, int beta, int side)
             res = quiesence(best, beta, side^1);
     
         --turn;
-        //std::cout<<"Q UNMAKE "<<std::endl;
-        //printState();
+        if(DEBUG){
+            std::cout<<"Q UNMAKE "<<std::endl;
+            printState();
+        }
+
         unmakeMoves(turn);
         
         if(!side){
@@ -4946,9 +4956,11 @@ int evaluate(int alpha, int beta, int mdepth, int side)
     if (morale[1] <= 0)
         return 1000000;
     if (0 >= mdepth){
-        //std::cout<<"QUIESENSE BEGIN current state:"<<std::endl;
+        if(DEBUG)
+            std::cout<<"QUIESENSE BEGIN current state:"<<std::endl;
         int res = quiesence(alpha, beta, side);
-        //std::cout<<"QUIESENSE EXXIT current state:"<<std::endl;
+        if(DEBUG)
+            std::cout<<"QUIESENSE EXXIT current state:"<<std::endl;
         return res;
     }
     candidate_pointer[turn]=0;
@@ -4981,10 +4993,14 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         int i = selectionSort();
         selectionSortArray[turn][i]=-10*agrobonus;
 
-        //std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
+        if(DEBUG)
+            std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
+        if(DEBUG)
+            std::cout<<"DEPTH "<<turn<<" MOVE: "<<j<<"/"<<candidate_pointer[turn]<<std::endl;
         endOfTurnTriggers(side);    
-        //printState();
+        if(DEBUG)
+            printState();
         ++turn;
         if(side)
             res = evaluate(alpha, best, mdepth-1, side^1);
@@ -4992,11 +5008,11 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             res = evaluate(best, beta, mdepth-1, side^1);
         
         --turn;
-        //std::cout<<"UNMAKE"<<std::endl;
+        if(DEBUG)
+            std::cout<<"UNMAKE"<<std::endl;
         unmakeMoves(turn);
-        //printState();
-        if(morale[1]>77)
-            throw 1;
+        if(DEBUG)
+            printState();
         if(side==0){
             best = std::max(best, res);
             if(best==res)
@@ -5046,11 +5062,12 @@ int main()
     //loadPosition("57,Player1,Player2,2000,2000,v57_scenario,1,1,1,1,1,1,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Spearman,,,,,Drake,Demon,Bishop,Spearman,,,,,Drake,King,Rook,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Ranger,Knight,Spearman,,,,,Drake,AirElemental,Knight,Spearman,,,,,Drake,Pyromancer,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0");
     //loadPosition("56,devbot#9202,PrivateAccount,0,2000,v56_replay,129,16,31,30,28,24,0,45,67,30,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Spearman,,,,,Drake,Demon,Bishop,Spearman,,,,,Drake,King,Rook,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Ranger,Knight,Spearman,,,,,Drake,AirElemental,Knight,Spearman,,,,,Drake,Pyromancer,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,54,46");
     //loadPosition("54,whitename,blackname,2500,2500,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,,Drake,,,,,Drake,Pyromancer,,Drake,,,,,Drake,AirElemental,,Samurai,,,,,Samurai,Ranger,,Samurai,,,,,Samurai,Knight,,Samurai,,,,,Samurai,Knight,Warrior,Samurai,,,,,Samurai,Warrior,King,Drake,,,,,Drake,King,,Drake,,,,,Drake,Demon,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0");
-    
+    int side=0;
     if(enterPos){
         std::string position;
         std::cin>>position;
         loadPosition(position);
+        std::cin>>side;
     }
 
     while(true){
