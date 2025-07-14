@@ -3634,7 +3634,7 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
 
     morale[capturedPiece&1]-=pmorale[id_board[xx][yy]];
     board[xx][yy]=0;
-    death[id_board[xx][yy]]=turn;
+    death[id_board[xx][yy]]=1;
     id_board[xx][yy]=-1;
 
     switch(capturedPiece&(2048-2)){
@@ -4719,6 +4719,15 @@ void recalculate_evaluation(){
     }
 }
 
+void check_state(){
+    for(int i=0; i<pc_cnt; i++){
+        if(death[i])
+            continue;
+        if(board[px[i]][py[i]]!=pieces[i]||id_board[px[i]][py[i]]!=i)
+            std::cout<<"FAIL "<<i<<" "<<px[i]<<" "<<py[i]<<" "<<pieces[i]<<" "<<death[i]<<std::endl;
+    }
+}
+
 int static_evaluation(int side);
 void printState(){
 
@@ -4737,9 +4746,10 @@ void printState(){
         std::cout<<std::endl;
     }
 
-    //for(int i=0; i<pc_cnt; i++)
-    //    std::cout<<"("<<px[i]<<", "<<py[i]<<") ";
+    for(int i=0; i<pc_cnt; i++)
+        std::cout<<"("<<px[i]<<", "<<py[i]<<") ";
     std::cout<<std::endl;
+    check_state();
     std::cout<<std::endl;
 }
 
@@ -4993,14 +5003,16 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         int i = selectionSort();
         selectionSortArray[turn][i]=-10*agrobonus;
 
-        if(DEBUG)
-            std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
-        makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
-        if(DEBUG)
+        if(DEBUG){
+            std::cout<<"{"<<std::endl;
             std::cout<<"DEPTH "<<turn<<" MOVE: "<<j<<"/"<<candidate_pointer[turn]<<std::endl;
-        endOfTurnTriggers(side);    
-        if(DEBUG)
+            std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
             printState();
+        }
+
+        makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
+        endOfTurnTriggers(side);    
+
         ++turn;
         if(side)
             res = evaluate(alpha, best, mdepth-1, side^1);
@@ -5008,11 +5020,14 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             res = evaluate(best, beta, mdepth-1, side^1);
         
         --turn;
-        if(DEBUG)
+        if(DEBUG){
+            std::cout<<"}"<<std::endl;
             std::cout<<"UNMAKE"<<std::endl;
+        }
         unmakeMoves(turn);
         if(DEBUG)
             printState();
+        
         if(side==0){
             best = std::max(best, res);
             if(best==res)
@@ -5073,13 +5088,14 @@ int main()
     while(true){
         printState();
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 6, 0)<<std::endl;
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 3, side)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
         std::cout << "elapsed time: " << elapsed_seconds.count() << "s"
         << std::endl;
         std::cout << "normal nodes: "<<nodes<<" quiesent nodes: "<<quiesent_nodes<<std::endl;
+        printState();
         printChosenMove();
         makeChosenMove();
         endOfTurnTriggers(0);
