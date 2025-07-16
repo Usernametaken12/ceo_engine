@@ -3484,10 +3484,16 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
                 killPiece(px[pc_id], py[pc_id], -1, -1);
             break;
         case 138: //militia
+            payMorale(capturedPiece&1, 4);
+            break;
         case 140:
+            payMorale(capturedPiece&1, 5);
+            break;
         case 142:
+            payMorale(capturedPiece&1, 6);
+            break;
         case 144:
-            payMorale(capturedPiece&1, 3);
+            payMorale(capturedPiece&1, 7);
             break;
         case 330: //frostmphit
         case 332:
