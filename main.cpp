@@ -2312,6 +2312,7 @@ void generateMoves(int pc_id, int x, int y)
         rook(2, 3, piece, pc_id, x, y);
         bishop(1, 3, piece, pc_id, x, y);
         knight(11, piece, pc_id, x, y);
+        break;
     case 596:
         queen(2, 3, piece, pc_id, x, y);
         knight(11, piece, pc_id, x, y);
