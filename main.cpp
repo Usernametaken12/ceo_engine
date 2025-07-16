@@ -248,6 +248,11 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         return;
     }
 
+    //melee king kill check
+    if(isEnchanted(pc_id)&&king_id[(piece&1)^1]==id_board[xx][yy])
+        if(moveType == 3 || moveType == 8 || moveType == 11 || moveType==4 || moveType==19 || moveType == 13 || moveType == 14 || moveType == 42)
+            return;
+
     switch (moveType)
     {
     case 1: // move
@@ -261,31 +266,31 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
             addMove(xx, yy, pc_id, 1);
         break;
     case 3:  // move or attack
-    case 8:  // path (won't be implemented)
+    case 8:  // path (not used, path uses 32)
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 1);
-        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1){
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) && !isEnchanted(id_board[xx][yy])){
             addMove(xx, yy, pc_id, 32);
         }
         break;
     case 11: // unblockable move or attack
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 1);
-        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1){
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) && !isEnchanted(id_board[xx][yy])){
             addMove(xx, yy, pc_id, 2);
         }
         break;
     case 4:  // attack only
-        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) && !isEnchanted(id_board[xx][yy]))
             addMove(xx, yy, pc_id, 32);
         break;
     case 19: // unblockable attack only
-        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) && !isEnchanted(id_board[xx][yy]))
             addMove(xx, yy, pc_id, 2);
         break;
     case 5:  // ranged destroy
     case 46: // magic destroy
-        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        if (board[xx][yy] != 0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) )
             addMove(xx, yy, pc_id, 14);
         break;
     case 6: // wind 
@@ -333,10 +338,13 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 13: // attack, move or swap
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 1);
-        else if (((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
-            addMove(xx, yy, pc_id, 2);
+        else if (((pieces[pc_id] ^ board[xx][yy]) & 1)){
+            if(!isEnchanted(id_board[xx][yy]))
+                addMove(xx, yy, pc_id, 2);
+        }
         else
             addMove(xx, yy, pc_id, 3);
+        break;
     case 14: // jump attack (not implemented)
         break;
     case 15: // freeze
@@ -344,11 +352,11 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
             addMove(xx, yy, pc_id, 5);
         break;
     case 16: // poison 
-        if(board[xx][yy]!=0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!poison_immune[board[xx][yy]/2]) && isPoisoned(id_board[xx][yy]))
+        if(board[xx][yy]!=0 && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1 && (!poison_immune[board[xx][yy]/2]) && !isPoisoned(id_board[xx][yy]))
             addMove(xx, yy, pc_id, 7);
         break;
     case 17: // attack minion
-        if (board[xx][yy] != 0 && isMinion[board[xx][yy]/2] && ((pieces[pc_id] ^ board[xx][yy]) & 1) == 1)
+        if (board[xx][yy] != 0 && isMinion[board[xx][yy]/2] && ((pieces[pc_id] ^ board[xx][yy]) & 1) && !isEnchanted(id_board[xx][yy]))
             addMove(xx, yy, pc_id, 2);
         break;
     case 18: // freeze push
@@ -403,8 +411,9 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
     case 33: // comet suicide (not implemented)
         break;
     case 34: // enchant
-        if(((board[xx][yy]^pieces[pc_id]) & 1)==0)
+        if(board[xx][yy]!=0 && ((board[xx][yy]^pieces[pc_id]) & 1)==0)
             addMove(xx, yy, pc_id, 11);
+        break;
     case 35: // transform into bat
         if (board[xx][yy] == 0)
             addMove(xx, yy, pc_id, 25);
@@ -3343,8 +3352,7 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id){
 
 
 void killPiece(int xx, int yy, int pc_id, int killType=0){
-    //std::cout<<"kill piece "<<xx<<" "<<yy<<" "<<pc_id<<std::endl;
-    int takingPiece=pieces[pc_id];
+    int takingPiece= pc_id==-1 ? 0 : pieces[pc_id];
     int capturedPiece=board[xx][yy];
     switch(takingPiece&(2048-2)){
         case 34: //bat
@@ -3685,7 +3693,7 @@ void inflictStatus(int nstatus, int xx, int yy, int pc_id){
     if(board[xx][yy]>=82 && board[xx][yy] <= 90 && nstatus>=7 && nstatus<=13)
         return killPiece(xx, yy, pc_id, 1);
 
-    status[id_board[xx][yy]]|=(1<<nstatus);
+    status[id_board[xx][yy]]|=(1LL<<nstatus);
     undostack[turn][undo_pnt[turn]][0]=3;
     undostack[turn][undo_pnt[turn]][1]=id_board[xx][yy];
     undostack[turn][undo_pnt[turn]][2]=nstatus;
@@ -3847,6 +3855,15 @@ void nullPiece(int xx, int yy, int pc_id){
     pmorale[id_board[xx][yy]]=0;
 }
 
+void unenchant(int xx, int yy, int pc_id){
+    undostack[turn][undo_pnt[turn]][0]=13;
+    undostack[turn][undo_pnt[turn]][1]=pc_id;
+    undostack[turn][undo_pnt[turn]][2]=(int)(status[pc_id]>>30);
+    undostack[turn][undo_pnt[turn]][3]=(int)(status[pc_id]&((1<<30)-1));
+    undo_pnt[turn]++;
+    status[pc_id]&=(1L<<32)-1;
+}
+
 //uses the refined list of 31 moves -> 10 or so operations
 void makeMove(int xx, int yy, int pc_id, int moveType){
     //std::cout<<xx<<" "<<yy<<" "<<pc_id<<" "<<moveType<<std::endl;
@@ -3857,6 +3874,8 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
         case 2: //take
             killPiece(xx, yy, pc_id);
             moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
+            if(isEnchanted(pc_id))
+                unenchant(xx, yy, pc_id);
             break;
         case 3: //swap
         case 4: //omniswap
@@ -4008,6 +4027,8 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
             }
             killPiece(xx, yy, pc_id);
             moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
+            if(isEnchanted(pc_id))
+                unenchant(xx, yy, pc_id);
             break;
         }
     }
@@ -4087,7 +4108,7 @@ void unmakeMoves(int tur){
             case 3:
             {
                 int pc_id = undostack[tur][i][1];
-                status[pc_id]-= (1<<undostack[tur][i][2]);
+                status[pc_id]-= (1L<<undostack[tur][i][2]);
                 break;
             }
 
@@ -4215,6 +4236,14 @@ void unmakeMoves(int tur){
                 transparent[pc_id]=trans;
                 pmorale[pc_id]=omorale;
                 morale[side]+=omorale;
+            }
+
+            case 13:
+            {
+                int pc_id = undostack[tur][i][1];
+                long long ostatus= ((undostack[tur][i][2]+0LL)<<30)+undostack[tur][i][3];
+                status[pc_id]=ostatus;
+                break;
             }
         }
     }
@@ -4344,9 +4373,11 @@ void endOfTurnTriggers(int side){
             if(xx+x<0)
                 continue;
             for(int yy=-1; yy<=1; yy++)
-                if(y+yy>=0&&y+yy<8&&board[x+xx][y+yy]!=0&&(board[x+xx][y+yy]&1)==side&&status[id_board[x+xx][y+yy]]!=0){
-                    cureUnit(x+xx, y+yy, id_board[x+xx][y+yy]);
-                    payMorale(side, 1);
+                if(y+yy>=0&&y+yy<8&&board[x+xx][y+yy]!=0&&(board[x+xx][y+yy]&1)==side){
+                    if(isPoisoned(id_board[x+xx][y+yy])||isPoisoned(id_board[x+xx][y+yy])||isCompeled(id_board[x+xx][y+yy])||isFrozen(id_board[x+xx][y+yy])){
+                        cureUnit(x+xx, y+yy, id_board[x+xx][y+yy]);
+                        payMorale(side, 1);
+                    }
                 }
                     
         }
@@ -5023,9 +5054,6 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);    
-        
-        if(morale[1]>94)
-            throw std::runtime_error("MORALE GAIN???");
 
         ++turn;
         if(side)
@@ -5042,8 +5070,6 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
         if(DEBUG)
             printState();
-        if(morale[1]>94)
-            throw std::runtime_error("MORALE GAIN???");
 
 
         if(side==0){
@@ -5130,7 +5156,7 @@ int main()
         printState();
         printChosenMove();
         makeChosenMove();
-        endOfTurnTriggers(0);
+        endOfTurnTriggers(side);
 
         if(true){
             std::cout<<"OPERATIONS: "<<std::endl;
@@ -5145,7 +5171,7 @@ int main()
         int xx, yy, id, mt;
         std::cin>>xx>>yy>>id>>mt;
         makeMove(xx, yy, id, mt);
-        endOfTurnTriggers(1);
+        endOfTurnTriggers(1-side);
         turn++;
         start_turn++;
     }
