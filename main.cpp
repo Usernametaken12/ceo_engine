@@ -3499,6 +3499,15 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 144:
             payMorale(capturedPiece&1, 7);
             break;
+        case 290: //dove
+        case 292:
+        case 294:
+        case 296:{
+            for(int dx=std::max(-1, -1*xx); dx<=std::min(1, 7-xx); dx++)
+                for(int dy=std::max(-1, -1*yy); dx<=std::min(1, 7-yy); dy++)
+                    if((board[xx+dx][yy+dy]^(capturedPiece&1))==0 && isChampion[board[xx+dx][yy+dy]/2])
+                        inflictStatus(32, xx+dx, yy+dy, id_board[xx+dx][yy+dy]);
+        }
         case 330: //frostmphit
         case 332:
         case 334:
