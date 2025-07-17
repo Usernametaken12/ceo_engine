@@ -2,7 +2,7 @@
 #include <string.h>
 #include <bits/stdc++.h>
 
-const bool DEBUG = false;
+const bool DEBUG = true;
 
 //(0, 0) is bottom left corner of board
 int board[8][8] = {0}; //included in hash
@@ -3699,7 +3699,8 @@ void swap(int x, int y, int xx, int yy, int pc_id){
 void inflictStatus(int nstatus, int xx, int yy, int pc_id){
     if(board[xx][yy]>=82 && board[xx][yy] <= 90 && nstatus>=7 && nstatus<=13)
         return killPiece(xx, yy, pc_id, 1);
-
+    if((status[id_board[xx][yy]]&(1LL<<nstatus))>0LL)
+        return;
     status[id_board[xx][yy]]|=(1LL<<nstatus);
     undostack[turn][undo_pnt[turn]][0]=3;
     undostack[turn][undo_pnt[turn]][1]=id_board[xx][yy];
@@ -3852,7 +3853,7 @@ void cureUnit(int xx, int yy, int pc_id){
 void nullPiece(int xx, int yy, int pc_id){
     undostack[turn][undo_pnt[turn]][0]=12;
     undostack[turn][undo_pnt[turn]][1]=id_board[xx][yy];
-    undostack[turn][undo_pnt[turn]][2]=board[xx][yy]+2048*transparent[pc_id];
+    undostack[turn][undo_pnt[turn]][2]=board[xx][yy]+2048*transparent[id_board[xx][yy]];
     undostack[turn][undo_pnt[turn]][3]=pmorale[id_board[xx][yy]];
     undo_pnt[turn]++;
 
@@ -4234,15 +4235,16 @@ void unmakeMoves(int tur){
 
             case 12:
             {
-                int pc_id = undostack[turn][undo_pnt[turn]][1];
-                bool trans = (undostack[turn][undo_pnt[turn]][2]&2048);
-                int side= (undostack[turn][undo_pnt[turn]][2]&1);
-                int omorale = undostack[turn][undo_pnt[turn]][3];
+                int pc_id = undostack[tur][i][1];
+                bool trans = (undostack[tur][i][2]&2048);
+                int side= (undostack[tur][i][2]&1);
+                int omorale = undostack[tur][i][3];
 
                 nulled[pc_id]=0;
                 transparent[pc_id]=trans;
                 pmorale[pc_id]=omorale;
                 morale[side]+=omorale;
+                break;
             }
 
             case 13:
@@ -4267,13 +4269,14 @@ void processStatus(int pc_id, int side){
     undo_pnt[turn]++;
 
     status[pc_id]<<=1;
+
     //poison
     if(status[pc_id]&(1<<6)){
         killPiece(px[pc_id], py[pc_id], -1, 1);
         return;
     }
 
-    status[pc_id]&=1125760319348671LL;
+    status[pc_id]&=(1LL<<37) - 1 - (1LL<<31) - (1LL<<20) - (1LL<<13) - (1LL<<6);
     //compel
     if((pieces[pc_id]&1)!=side&&isCompeled(pc_id)&&!isFrozen(pc_id)&&!isPetrified(pc_id))
         if(board[px[pc_id]][py[pc_id]+1-2*side]==0)
@@ -4796,10 +4799,11 @@ void printState(){
     }
 
     for(int i=0; i<pc_cnt; i++)
-        std::cout<<"("<<i<<": "<<px[i]<<", "<<py[i]<<", "<<death[i]<<", "<<status[i]<<") ";
+        std::cout<<"("<<i<<": "<<pmorale[i]<<", "<<status[i]<<", "<<death[i]<<", "<<nulled[i]<<") ";
     std::cout<<std::endl;
     check_state();
     std::cout<<std::endl;
+
 }
 
 void printCandidateMoves(){
@@ -5140,12 +5144,13 @@ int main()
         int xx, yy, id, mt;
         std::cin>>xx>>yy>>id>>mt;
         makeMove(xx, yy, id, mt);
-        endOfTurnTriggers(0);
+        endOfTurnTriggers(side);
 
         std::cout<<"OPERATIONS: "<<std::endl;
         for(int i=0; i<undo_pnt[turn]; i++)
             std::cout<<undostack[turn][i][0]<<" "<<undostack[turn][i][1]<<" "<<undostack[turn][i][2]<<" "<<undostack[turn][i][3]<<" "<<undostack[turn][i][4]<<" "<<undostack[turn][i][5]<<std::endl;
-
+        
+        printState();
         unmakeMoves(turn);
         printState();
         return 1;
@@ -5153,7 +5158,7 @@ int main()
     printState();
     while(true){
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 6, side)<<std::endl;
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 3, side)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
