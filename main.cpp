@@ -5,15 +5,18 @@
 const bool DEBUG = false;
 
 //(0, 0) is bottom left corner of board
-int board[8][8] = {0}; //included in hash
+int board[8][8] = {}; //included in hash
 int id_board[8][8]; //included in hash
 
-int lightning[8][8] = {0}; //yes
+int lightning[8][8] = {}; //yes
 int lightning_cnt=0;
-int butterfly[8][8] = {0}; //yes
+int butterfly[8][8] = {}; //yes
 int butterfly_cnt=0;
-int meteor[8][8] = {0}; //yes
+int meteor[8][8] = {}; //yes
 int meteor_cnt=0;
+
+int doveList[2][20] = {};
+int dovePnt[2]={};
 
 int samuraiList[2][20] = {};
 int samuraiPnt[2]={0,0};
@@ -3732,6 +3735,21 @@ void pushPiece(int x, int y, int xx, int yy, int pc_id, int dis=3){
     }
     if(lvx!=xx||lvy!=yy)
         moveToSquare(xx, yy, lvx, lvy, id_board[xx][yy]);
+    
+    //sylph promote
+    if(pieces[pc_id]>=498 && pieces[pc_id]<504 && ((board[lvx][lvy]^pieces[pc_id])&1)){
+        replacePiece(px[pc_id], py[pc_id], pc_id, pieces[pc_id]+2);
+    }
+    else if(pieces[pc_id]>=504 && pieces[pc_id]<506 && ((board[lvx][lvy]^pieces[pc_id])&1)){
+        replacePiece(px[pc_id], py[pc_id], pc_id, pieces[pc_id]+34);
+    }
+    //air elemental promote/summon sylph
+    else if(pieces[pc_id]>=538&&pieces[pc_id]<544 && ((board[lvx][lvy]^pieces[pc_id])&1)){
+        replacePiece(px[pc_id], py[pc_id], pc_id, pieces[pc_id]+2);
+    }
+    else if(pieces[pc_id]>=544&&pieces[pc_id]<546 && ((board[lvx][lvy]^pieces[pc_id])&1)){
+        summonPiece(xx, yy, 498 + (pieces[pc_id]&1));
+    }
 }
 
 void summonPiece(int xx, int yy, int pieceType){
@@ -5082,10 +5100,6 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         if(DEBUG)
             printState();
 
-        if(turn==0){
-            std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
-            std::cout<<res<<std::endl;
-        }
 
         if(side==0){
             if(res>best)
