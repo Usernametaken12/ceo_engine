@@ -2,7 +2,7 @@
 #include <string.h>
 #include <bits/stdc++.h>
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 //(0, 0) is bottom left corner of board
 int board[8][8] = {0}; //included in hash
@@ -5158,7 +5158,7 @@ int main()
     printState();
     while(true){
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 3, side)<<std::endl;
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 6, side)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
