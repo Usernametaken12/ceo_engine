@@ -971,6 +971,14 @@ void archbishop(int range, int piece, int pc_id, int x, int y){
     }
 }
 
+int stonemage_directions[8][2] = {{1, 4}, {-1, 4}, {1, -4}, {-1, -4}, {-4, -1}, {4, 1}, {4, -1}, {-4, 1}};
+void stonemage(int moveType, int piece, int pc_id, int x, int y){
+    for (int i = 4; i < 8; i++)
+    {
+        if (x + stonemage_directions[i][0] >= 0 && x + stonemage_directions[i][0] <= 7 && y + stonemage_directions[i][1] >= 0 && y + stonemage_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + stonemage_directions[i][0], y + stonemage_directions[i][1], piece, pc_id, moveType);
+    }
+}
 
 void generateMoves(int pc_id, int x, int y)
 {
@@ -2110,12 +2118,30 @@ void generateMoves(int pc_id, int x, int y)
         rook(2, 17, piece, pc_id, x, y);
         break;
     case 490: // Stonemage
+        rook(1, 13, piece, pc_id, x, y);
+        rookHorizontal(2, 10, piece, pc_id, x, y, 2);
+        bishop(1, 23, piece, pc_id, x, y);
         break;
     case 492:
+        rook(1, 13, piece, pc_id, x, y);
+        rookHorizontal(3, 10, piece, pc_id, x, y, 2);
+        bishop(1, 23, piece, pc_id, x, y);
+        knightHorizontal(23, piece, pc_id, x, y);
         break;
     case 494:
+        rook(1, 13, piece, pc_id, x, y);
+        rookHorizontal(4, 10, piece, pc_id, x, y, 2);
+        bishop(1, 23, piece, pc_id, x, y);
+        knightHorizontal(23, piece, pc_id, x, y);
+        valkHorizontal(23, piece, pc_id, x, y);
         break;
     case 496:
+        rook(1, 13, piece, pc_id, x, y);
+        rookHorizontal(5, 10, piece, pc_id, x, y, 2);
+        bishop(1, 23, piece, pc_id, x, y);
+        knightHorizontal(23, piece, pc_id, x, y);
+        valkHorizontal(23, piece, pc_id, x, y);
+        stonemage(23, piece, pc_id, x, y);
         break;
     case 498: // Sylph
         rook(1, 1, piece, pc_id, x, y);
