@@ -3672,6 +3672,14 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
             break;
     }
     
+    //dove
+    for(int i=0; i<dovePnt[capturedPiece&1]; i++){
+        int dove = doveList[capturedPiece&1][i];
+        if(death[dove] || pieces[dove]<290 || pieces[dove]>=298)
+            if(board[px[dove]][py[dove]+1-2*(capturedPiece&1)]==0)
+                moveToSquare(px[dove], py[dove], px[dove], py[dove]+1-2*(capturedPiece&1), dove);
+    }
+
     return;
 }
 
@@ -3773,6 +3781,10 @@ void summonPiece(int xx, int yy, int pieceType){
         alchList[pieceType&1][alchPnt[pieceType&1]++]=pc_cnt-1;
     }
 
+    if(pieceType>=290 && pieceType<298){
+        doveList[pieceType&1][dovePnt[pieceType&1]++]=pc_cnt-1;
+    }
+
     if(pieceType>=474&&pieceType<482){ //samurai
         samuraiList[pieceType&1][samuraiPnt[pieceType&1]++]=pc_cnt-1;
     }
@@ -3781,6 +3793,7 @@ void summonPiece(int xx, int yy, int pieceType){
         lustList[pieceType&1][lustPnt[pieceType&1]++]=pc_cnt-1;
     }
 
+    //transparency
     if(pieceType >= 26 && pieceType<34 || pieceType>=106&&pieceType<114 || pieceType>=410 && pieceType<418 || pieceType>=610 && pieceType<618)
         transparent[pc_cnt-1]=1;
 
