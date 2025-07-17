@@ -5034,9 +5034,9 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
     int best = 1000000*(-1+2*side);
     if(side==0)
-        best=alpha-1;
+        best=alpha;
     else
-        best=beta+1;
+        best=beta;
 
     //null move
     //std::cout<<"NMR"<<std::endl;
@@ -5082,18 +5082,22 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         if(DEBUG)
             printState();
 
+        if(turn==0){
+            std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
+            std::cout<<res<<std::endl;
+        }
 
         if(side==0){
-            best = std::max(best, res);
-            if(best==res)
+            if(res>best)
                 bm=i;
+            best = std::max(best, res);
             if(best>=beta)
                 break;
         }
         else{
-            best = std::min(best, res);
-            if(best==res)
+            if(res<best)
                 bm=i;
+            best = std::min(best, res);
             if(best<=alpha)
                 break;
         }
