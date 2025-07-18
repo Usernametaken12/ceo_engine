@@ -693,6 +693,34 @@ void knightBackward(int moveType, int piece, int pc_id, int x, int y)
     }
 }
 
+void knightOnlyBackward(int moveType, int piece, int pc_id, int x, int y);
+
+void knightOnlyForward(int moveType, int piece, int pc_id, int x, int y){
+    if ((piece & 1) == 1)
+    {
+        knightOnlyBackward(moveType, piece - 1, pc_id, x, y);
+        return;
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        if (x + knight_directions[i][0] >= 0 && x + knight_directions[i][0] <= 7 && y + knight_directions[i][1] >= 0 && y + knight_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + knight_directions[i][0], y + knight_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
+void knightOnlyBackward(int moveType, int piece, int pc_id, int x, int y){
+    if ((piece & 1) == 1)
+    {
+        knightOnlyForward(moveType, piece - 1, pc_id, x, y);
+        return;
+    }
+    for (int i = 6; i < 8; i++)
+    {
+        if (x + knight_directions[i][0] >= 0 && x + knight_directions[i][0] <= 7 && y + knight_directions[i][1] >= 0 && y + knight_directions[i][1] <= 7)
+            addCandidateMove(x, y, x + knight_directions[i][0], y + knight_directions[i][1], piece, pc_id, moveType);
+    }
+}
+
 void knightHorizontal(int moveType, int piece, int pc_id, int x, int y){
     for (int i = 2; i < 6; i++)
         if (x + knight_directions[i][0] >= 0 && x + knight_directions[i][0] <= 7 && y + knight_directions[i][1] >= 0 && y + knight_directions[i][1] <= 7)
@@ -979,6 +1007,7 @@ void stonemage(int moveType, int piece, int pc_id, int x, int y){
             addCandidateMove(x, y, x + stonemage_directions[i][0], y + stonemage_directions[i][1], piece, pc_id, moveType);
     }
 }
+
 
 void generateMoves(int pc_id, int x, int y)
 {
@@ -1620,7 +1649,8 @@ void generateMoves(int pc_id, int x, int y)
         bishopForward(2, 1, piece, pc_id, x, y, 2);
         rookForward(1, 7, piece, pc_id, x, y);
         rookBackward(1, 1, piece, pc_id, x, y);
-        // add move from start                                   <<<<<<<<<<<<
+        knightOnlyForward(44, piece, pc_id, x, y);
+        mancerOnlyForward(44, piece, pc_id, x, y);
         break;
     case 266: // Berserker
         rook(2, 3, piece, pc_id, x, y);
