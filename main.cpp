@@ -1,12 +1,26 @@
 #include <stdio.h>
 #include <string.h>
 #include <bits/stdc++.h>
+#include <random>
 
 const bool DEBUG = false;
 
+const int hash_table_size = 16777216; //2^24
+const int hash_mask = hash_table_size-1;
+long long zblack;
+
+long long zobrist[hash_table_size] = {-1};
+int nodeEval[hash_table_size] = {}; 
+short nodeMove[hash_table_size][4] = {};
+short nodeType[hash_table_size] = {}; //0 = normal, 1 = lower bound, -1 = upperbound
+short nodeDepth[hash_table_size] = {};
+
+
 //(0, 0) is bottom left corner of board
 int board[8][8] = {}; //included in hash
-int id_board[8][8]; //included in hash
+int id_board[8][8]; //not
+
+long long zboard[8][8][1200] = {};
 
 int lightning[8][8] = {}; //yes
 int lightning_cnt=0;
@@ -14,6 +28,9 @@ int butterfly[8][8] = {}; //yes
 int butterfly_cnt=0;
 int meteor[8][8] = {}; //yes
 int meteor_cnt=0;
+
+long long zlightning[8][8] = {};
+long long zmeteor[8][8] = {};
 
 int doveList[2][20] = {};
 int dovePnt[2]={};
@@ -31,6 +48,11 @@ long long status[200] = {0}; //yes
 bool voided[200] = {}; //yes
 bool nulled[200] = {}; //yes
 bool transparent[200] = {}; //no
+
+long long zvoided[200] = {};
+long long znulled[200] = {};
+long long zmorale[2][250] = {}; //starts at -50
+
 int moved[200] = {0}; //no
 int px[200] = {0}; //no
 int py[200] = {0}; //no
@@ -40,6 +62,8 @@ int m_depth = 1;
 int turn = 0;
 
 int king_id[2] = {-1, -1};
+
+long long hash=0;
 
 //first value is a spacer! 
 bool freeze_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1};
@@ -183,28 +207,44 @@ int piece_square_tables[11][8][8] =
     }
 };
 
-
+long long zstatus_id[200] = {};
+long long status_prime = 1000000007LL;
+long long zstatus(int pc_id){
+    return ((status[pc_id])%status_prime)*zstatus_id[pc_id];
+}
 
 const int MAX_DEPTH = 150;
-//int alpha[MDEPTH + 1];
-//int beta[MDEPTH + 1];
 
-//(x,y) --> (y, x) --> (7-y, x)
-void init()
-{
-    /*for (int i = 0; i <= MDEPTH; i++)
-    {
-        alpha[i] = -1000;
-        beta[i] = 1000;
-    }*/
+void init(){
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
             id_board[i][j] = -1;
-    /*for(int k=0; k<11; k++)
-        for(int x=0; x<8; x++)
-            for(int y=0; y<8; y++){
-                std::swap(piece_square_tables[k][x][y], piece_square_tables[k][7-y][x]);
-            }*/
+
+    std::mt19937_64 rnd(20201);
+    
+    for (int i = 0; i<8; i++)
+        for(int j = 0; j<8; j++)
+            for(int k=0; k<1200; k++)
+                zboard[i][j][k]= rnd();
+    
+    for(int i=0; i<8; i++)
+        for(int j=0; j<8; j++){
+            zlightning[i][j]=rnd();
+            zmeteor[i][j]=rnd();
+        }
+    
+    for(int i=0; i<200; i++){
+        znulled[i]=rnd();
+        zvoided[i]=rnd();
+        zstatus_id[i]=rnd()%(1LL<<30);
+    }
+
+    for(int i=0; i<250; i++){
+        zmorale[0][i]=rnd();
+        zmorale[1][i]=rnd();
+    }
+
+    zblack=rnd();
 }
 
 int candidateMoveStack[150][400][4] = {0};
@@ -3401,6 +3441,9 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id){
     px[pc_id]=xx;
     py[pc_id]=yy;
 
+    hash^=zboard[xx][yy][board[xx][yy]];
+    hash^=zboard[x][y][board[xx][yy]];
+
     undostack[turn][undo_pnt[turn]][0]=0;
     undostack[turn][undo_pnt[turn]][1]=x;
     undostack[turn][undo_pnt[turn]][2]=y;
@@ -3446,6 +3489,7 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 440:
             if(king_id[takingPiece&1]==-1||death[king_id[takingPiece&1]]){
                 replacePiece(px[pc_id], py[pc_id], pc_id, 1034+(takingPiece&1));
+                payMorale(takingPiece&1, -20);
                 int prevKing_id=king_id[takingPiece&1];
                 king_id[takingPiece&1]=pc_id;
                 undostack[turn][undo_pnt[turn]][0]=10;
@@ -3721,11 +3765,15 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     undo_pnt[turn]++;
 
     removePVT(capturedPiece, xx, yy);
+    hash^=zmorale[capturedPiece&1][morale[capturedPiece&1]+50];
+    hash^=zboard[xx][yy][capturedPiece];
 
     morale[capturedPiece&1]-=pmorale[id_board[xx][yy]];
     board[xx][yy]=0;
     death[id_board[xx][yy]]=1;
     id_board[xx][yy]=-1;
+
+    hash^=zmorale[capturedPiece&1][morale[capturedPiece&1]+50];
 
     switch(capturedPiece&(2048-2)){
         case 946: //phoenix
@@ -3759,6 +3807,9 @@ void swap(int x, int y, int xx, int yy, int pc_id){
     removePVT(board[x][y], x, y);
     removePVT(board[xx][yy], xx, yy);
 
+    hash^=zboard[x][y][board[x][y]];
+    hash^=zboard[xx][yy][board[xx][yy]];
+
     std::swap(board[xx][yy], board[x][y]);
     std::swap(id_board[xx][yy], id_board[x][y]);
 
@@ -3767,6 +3818,9 @@ void swap(int x, int y, int xx, int yy, int pc_id){
 
     addPVT(board[x][y], x, y);
     addPVT(board[xx][yy], xx, yy);
+
+    hash^=zboard[x][y][board[x][y]];
+    hash^=zboard[xx][yy][board[xx][yy]];
 
     moved[id_board[xx][yy]]++;
     moved[id_board[x][y]]++;
@@ -3777,7 +3831,10 @@ void inflictStatus(int nstatus, int xx, int yy, int pc_id){
         return killPiece(xx, yy, pc_id, 1);
     if((status[id_board[xx][yy]]&(1LL<<nstatus))>0LL)
         return;
+    hash^=zstatus(id_board[xx][yy]);
     status[id_board[xx][yy]]|=(1LL<<nstatus);
+    hash^=zstatus(id_board[xx][yy]);
+
     undostack[turn][undo_pnt[turn]][0]=3;
     undostack[turn][undo_pnt[turn]][1]=id_board[xx][yy];
     undostack[turn][undo_pnt[turn]][2]=nstatus;
@@ -3829,9 +3886,14 @@ void summonPiece(int xx, int yy, int pieceType){
     pieces[pc_cnt]=pieceType;
     id_board[xx][yy]=pc_cnt;
     board[xx][yy]=pieceType;
+    
+    hash^=zboard[xx][yy][pieceType];
 
     pmorale[pc_cnt]=pieceValue[pieceType/2];
+
+    hash^=zmorale[pieceType&1][morale[pieceType&1]+50];
     morale[pieceType&1]+=pmorale[pc_cnt];
+    hash^=zmorale[pieceType&1][morale[pieceType&1]+50];
 
     px[pc_cnt]=xx;
     py[pc_cnt]=yy;
@@ -3868,25 +3930,23 @@ void summonPiece(int xx, int yy, int pieceType){
 }
 
 void markSquare(int mark, int xx, int yy){
-    int prevTurn=-1;
     if(mark==0){
         if(lightning[xx][yy]>=turn)
             return;
-        prevTurn=lightning[xx][yy];
         lightning[xx][yy]=turn+8;
         lightning_cnt++;
+        hash^=zlightning[xx][yy];
     }
     else if(mark==1){
         if(meteor[xx][yy]>=turn)
             return;
-        prevTurn=meteor[xx][yy];
         meteor[xx][yy]=turn+12;
         meteor_cnt++;
+        hash^=zmeteor[xx][yy];
     }
     else if(mark==2){
         if(butterfly[xx][yy]>=turn)
             return;
-        prevTurn=butterfly[xx][yy];
         butterfly[xx][yy]=turn+40;
         butterfly_cnt++;
     }
@@ -3898,7 +3958,10 @@ void markSquare(int mark, int xx, int yy){
 }
 
 void payMorale(int side, int qnt){
+    hash^=zmorale[side][morale[side]+50];
     morale[side]-=qnt;
+    hash^=zmorale[side][morale[side]+50];
+
     undostack[turn][undo_pnt[turn]][0]=6;
     undostack[turn][undo_pnt[turn]][1]=side;
     undostack[turn][undo_pnt[turn]][2]=qnt;
@@ -3916,12 +3979,21 @@ void replacePiece(int xx, int yy, int pc_id, int nPieceType){
     removePVT(board[xx][yy], xx, yy);
     addPVT(nPieceType, xx, yy);
 
+    hash^=zmorale[0][morale[0]+50];
+    hash^=zmorale[1][morale[1]+50];
+
     morale[pieces[pc_id]&1]-=pmorale[pc_id];
     morale[nPieceType&1]+=pieceValue[nPieceType/2];
+
+    hash^=zmorale[0][morale[0]+50];
+    hash^=zmorale[1][morale[1]+50];
+    hash^=zboard[xx][yy][board[xx][yy]];
 
     board[xx][yy]=nPieceType;
     pmorale[pc_id]=pieceValue[nPieceType/2];
     pieces[pc_id]=nPieceType;
+
+    hash^=zboard[xx][yy][board[xx][yy]];
 
     if(nPieceType>=106 && nPieceType<114)
         transparent[pc_id]=1;
@@ -3932,8 +4004,13 @@ void increaseValue(int pc_id, int amount){
     undostack[turn][undo_pnt[turn]][1]=pc_id;
     undostack[turn][undo_pnt[turn]][2]=pmorale[pc_id];
     undo_pnt[turn]++;
+
+    hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
+
     pmorale[pc_id]+=amount;
     morale[pieces[pc_id]&1]+=amount;
+
+    hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
 }
 
 void cureUnit(int xx, int yy, int pc_id){
@@ -3942,8 +4019,13 @@ void cureUnit(int xx, int yy, int pc_id){
     undostack[turn][undo_pnt[turn]][2]=(int)(status[pc_id]>>30);
     undostack[turn][undo_pnt[turn]][3]=(int)(status[pc_id]&((1<<30)-1));
     undo_pnt[turn]++;
+
+    hash^=zstatus(pc_id);
+
     status[pc_id]>>=32;
     status[pc_id]<<=32; 
+
+    hash^=zstatus(pc_id);
 }
 
 void nullPiece(int xx, int yy, int pc_id){
@@ -3955,8 +4037,14 @@ void nullPiece(int xx, int yy, int pc_id){
 
     nulled[id_board[xx][yy]]=1;
     transparent[id_board[xx][yy]]=1;
+
+    hash^=znulled[id_board[xx][yy]];
+    hash^=zmorale[board[xx][yy]&1][morale[board[xx][yy]&1]+50];
+
     morale[board[xx][yy]&1]-=pmorale[id_board[xx][yy]];
     pmorale[id_board[xx][yy]]=0;
+
+    hash^=zmorale[board[xx][yy]&1][morale[board[xx][yy]&1]+50];
 }
 
 void unenchant(int xx, int yy, int pc_id){
@@ -3965,7 +4053,12 @@ void unenchant(int xx, int yy, int pc_id){
     undostack[turn][undo_pnt[turn]][2]=(int)(status[pc_id]>>30);
     undostack[turn][undo_pnt[turn]][3]=(int)(status[pc_id]&((1<<30)-1));
     undo_pnt[turn]++;
+
+    hash^=zstatus(pc_id);
+
     status[pc_id]&=(1L<<32)-1;
+
+    hash^=zstatus(pc_id);
 }
 
 //uses the refined list of 31 moves -> 10 or so operations
@@ -4157,6 +4250,10 @@ void unmakeMoves(int tur){
                     removePVT(pieces[pc_id], xx, yy);
                 }
 
+
+                hash^=zboard[xx][yy][board[xx][yy]];
+                hash^=zboard[x][y][board[xx][yy]];            
+
                 board[x][y]=board[xx][yy];
                 id_board[x][y]=pc_id;
 
@@ -4177,8 +4274,13 @@ void unmakeMoves(int tur){
 
                 addPVT(pieces[pc_id], xx, yy);
 
+                hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
+                hash^=zboard[xx][yy][pieces[pc_id]];
+
                 morale[pieces[pc_id]&1]+=pmorale[pc_id];
                 board[xx][yy]=pieces[pc_id];
+
+                hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
 
                 death[pc_id]=0;
                 id_board[xx][yy]=pc_id;
@@ -4195,12 +4297,18 @@ void unmakeMoves(int tur){
                 removePVT(board[x][y], x, y);
                 removePVT(board[xx][yy], xx, yy);
 
+                hash^=zboard[x][y][board[x][y]];
+                hash^=zboard[xx][yy][board[xx][yy]];            
+
                 std::swap(board[xx][yy], board[x][y]);
                 std::swap(id_board[xx][yy], id_board[x][y]);
 
                 addPVT(board[x][y], x, y);
                 addPVT(board[xx][yy], xx, yy);
 
+                hash^=zboard[x][y][board[x][y]];
+                hash^=zboard[xx][yy][board[xx][yy]];
+            
                 std::swap(px[id_board[x][y]], px[id_board[xx][yy]]);
                 std::swap(py[id_board[x][y]], py[id_board[xx][yy]]);
 
@@ -4212,7 +4320,9 @@ void unmakeMoves(int tur){
             case 3:
             {
                 int pc_id = undostack[tur][i][1];
+                hash^=zstatus(pc_id);
                 status[pc_id]-= (1L<<undostack[tur][i][2]);
+                hash^=zstatus(pc_id);
                 break;
             }
 
@@ -4220,10 +4330,15 @@ void unmakeMoves(int tur){
             {
                 pc_cnt--;
                 removePVT(pieces[pc_cnt], px[pc_cnt], py[pc_cnt]);
+                
+                hash^=zboard[px[pc_cnt]][py[pc_cnt]][pieces[pc_cnt]];
 
                 id_board[px[pc_cnt]][py[pc_cnt]]=-1;
                 board[px[pc_cnt]][py[pc_cnt]]=0;
+
+                hash^=zmorale[pieces[pc_cnt]&1][morale[pieces[pc_cnt]&1]+50];
                 morale[pieces[pc_cnt]&1]-=pmorale[pc_cnt];
+                hash^=zmorale[pieces[pc_cnt]&1][morale[pieces[pc_cnt]&1]+50];
 
                 /*pmorale[pc_cnt]=0;
                 px[pc_cnt]=-1;
@@ -4241,10 +4356,12 @@ void unmakeMoves(int tur){
                 if(mark==0){
                     lightning_cnt--;
                     lightning[xx][yy]=0;
+                    hash^=zlightning[xx][yy];
                 }
                 else if(mark==1){
                     meteor_cnt--;
                     meteor[xx][yy]=0;
+                    hash^=zmeteor[xx][yy];
                 }
                 else if(mark==2){
                     butterfly_cnt--;
@@ -4255,7 +4372,11 @@ void unmakeMoves(int tur){
 
             case 6:
             {
-                morale[undostack[tur][i][1]]+=undostack[tur][i][2];
+                int side= undostack[tur][i][1];
+
+                hash^=zmorale[side][morale[side]+50];
+                morale[side]+=undostack[tur][i][2];
+                hash^=zmorale[side][morale[side]+50];
                 break;
             }
 
@@ -4270,12 +4391,21 @@ void unmakeMoves(int tur){
 
                 removePVT(pieces[pc_id], px[pc_id], py[pc_id]);
 
+                hash^=zmorale[0][morale[0]+50];
+                hash^=zmorale[1][morale[1]+50];            
+
                 morale[pieces[pc_id]&1]-=pmorale[pc_id];
                 morale[pc&1]+=oval;
+
+                hash^=zmorale[0][morale[0]+50];
+                hash^=zmorale[1][morale[1]+50];            
+                hash^=zboard[px[pc_id]][py[pc_id]][board[px[pc_id]][py[pc_id]]];
 
                 board[px[pc_id]][py[pc_id]]=pc;
                 pmorale[pc_id]=oval;
                 pieces[pc_id]=pc;
+
+                hash^=zboard[px[pc_id]][py[pc_id]][board[px[pc_id]][py[pc_id]]];
 
                 addPVT(pc, px[pc_id], py[pc_id]);
 
@@ -4286,17 +4416,29 @@ void unmakeMoves(int tur){
             {
                 int pc_id = undostack[tur][i][1];
                 int oval = undostack[tur][i][2];
+
+                hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
+
                 morale[pieces[pc_id]&1]-=pmorale[pc_id];
                 pmorale[pc_id]=oval;
                 morale[pieces[pc_id]&1]+=pmorale[pc_id];
+
+                hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
+
                 break;
             }
 
             case 9:
             {
                 int pc_id = undostack[tur][i][1];
+
+                hash^=zstatus(pc_id);
+
                 long long ostatus= ((undostack[tur][i][2]+0LL)<<30)+undostack[tur][i][3];
                 status[pc_id]=ostatus;
+
+                hash^=zstatus(pc_id);
+
                 break;
             }
 
@@ -4316,6 +4458,7 @@ void unmakeMoves(int tur){
                     case 1:
                         meteor_cnt++;
                         meteor[x][y]=tur;
+                        hash^=zmeteor[x][y];
                         break;
                     case 2:
                         butterfly_cnt++;
@@ -4324,6 +4467,7 @@ void unmakeMoves(int tur){
                     case 3:
                         lightning_cnt++;
                         lightning[x][y]=tur;
+                        hash^=zlightning[x][y];
                         break;
                 }
                 break;
@@ -4336,18 +4480,30 @@ void unmakeMoves(int tur){
                 int side= (undostack[tur][i][2]&1);
                 int omorale = undostack[tur][i][3];
 
+                hash^=znulled[pc_id];
+
                 nulled[pc_id]=0;
                 transparent[pc_id]=trans;
+
+                hash^=zmorale[side][morale[side]+50];
+
                 pmorale[pc_id]=omorale;
                 morale[side]+=omorale;
+
+                hash^=zmorale[side][morale[side]+50];
+
                 break;
             }
 
             case 13:
             {
                 int pc_id = undostack[tur][i][1];
+
+                hash^=zstatus(pc_id);
                 long long ostatus= ((undostack[tur][i][2]+0LL)<<30)+undostack[tur][i][3];
                 status[pc_id]=ostatus;
+                hash^=zstatus(pc_id);
+
                 break;
             }
         }
@@ -4364,6 +4520,7 @@ void processStatus(int pc_id, int side){
     undostack[turn][undo_pnt[turn]][3]=(int)(status[pc_id]&((1<<30)-1));
     undo_pnt[turn]++;
 
+    hash^=zstatus(pc_id);
     status[pc_id]<<=1;
 
     //poison
@@ -4373,6 +4530,8 @@ void processStatus(int pc_id, int side){
     }
 
     status[pc_id]&=(1LL<<37) - 1 - (1LL<<31) - (1LL<<20) - (1LL<<13) - (1LL<<6);
+    hash^=zstatus(pc_id);
+
     //compel
     if((pieces[pc_id]&1)!=side&&isCompeled(pc_id)&&!isFrozen(pc_id)&&!isPetrified(pc_id))
         if(board[px[pc_id]][py[pc_id]+1-2*side]==0)
@@ -4399,6 +4558,8 @@ void endOfTurnTriggers(int side){
                         }
                     meteor_cnt--;
                     meteor[x][y]=0;
+                    hash^=zmeteor[x][y];
+
                     undostack[turn][undo_pnt[turn]][0]=11;
                     undostack[turn][undo_pnt[turn]][1]=x;
                     undostack[turn][undo_pnt[turn]][2]=y;
@@ -4437,6 +4598,8 @@ void endOfTurnTriggers(int side){
                         killPiece(x, y, -1, 1);
                     lightning_cnt--;
                     lightning[x][y]=0;
+                    hash^=zlightning[x][y];
+                    
                     undostack[turn][undo_pnt[turn]][0]=11;
                     undostack[turn][undo_pnt[turn]][1]=x;
                     undostack[turn][undo_pnt[turn]][2]=y;
@@ -5033,17 +5196,71 @@ int quiesence(int alpha, int beta, int side)
     else if(side==1&&static_evaluation(side)<=alpha)
         return alpha;
     
+
+    int best = 1000000*(-1+2*side);
+
+    int tail = (hash^(side ? zblack : 0))&hash_mask;
+    if(zobrist[tail]==(hash^(side ? zblack : 0))){
+        if(nodeType[tail]==0)
+            return nodeEval[tail];
+        if(side==0){
+            if(nodeType[tail]==1){
+                if(nodeEval[tail]>=beta)
+                    return nodeEval[tail];
+            }
+            else{
+                if(nodeEval[tail]<=alpha)
+                    return nodeEval[tail];
+            }
+        }
+        else{
+            if(nodeType[tail]==1){
+                if(nodeEval[tail]>=beta)
+                    return nodeEval[tail];
+            }
+            else{
+                if(nodeEval[tail]<=alpha)
+                    return nodeEval[tail];
+            }
+        }
+    
+        //try saved move
+        /*
+        int eval;
+        makeMove(nodeMove[tail][0], nodeMove[tail][1], nodeMove[tail][2], nodeMove[tail][3]);
+        endOfTurnTriggers(side);    
+        ++turn;
+        if(side)
+            eval = quiesence(alpha, beta, side^1);
+        else
+            eval = quiesence(alpha, beta, side^1);        
+        --turn;
+        unmakeMoves(turn);
+
+        if(side==0){
+            if(eval>=beta)
+                return eval;
+        }
+        else{
+            if(eval<=alpha)
+                return eval;
+        }
+
+        best=eval;
+        */
+    }
+
+
     candidate_pointer[turn]=0;
     for(int i=0; i<pc_cnt; i++){
         if((pieces[i]&1)==side&&!death[i])
             generateMoves(i, px[i], py[i]);
     }
 
-    int best = side==0 ? alpha : beta;
-
 
     int bm =-1;
     int res=-1;
+    short cutAll;
     initSelectionSort();
     for(int j=0; j<candidate_pointer[turn]; j++){
         
@@ -5068,9 +5285,9 @@ int quiesence(int alpha, int beta, int side)
         ++turn;
 
         if(side)
-            res = quiesence(alpha, best, side^1);
+            res = quiesence(alpha, std::min(best, beta), side^1);
         else
-            res = quiesence(best, beta, side^1);
+            res = quiesence(std::max(alpha, best), beta, side^1);
     
         --turn;
         if(DEBUG){
@@ -5081,24 +5298,40 @@ int quiesence(int alpha, int beta, int side)
         unmakeMoves(turn);
         
         if(!side){
-            best = std::max(best, res);
-            if(best==res)
+            if(res>best)
                 bm=i;
-            if(best>=beta)
+            best = std::max(best, res);
+            if(best>=beta){
+                cutAll=1;
                 break;
+            }
         }
         else{
-            best = std::min(best, res);
-            if(best==res)
+            if(res<best){
                 bm=i;
-            if(best<=alpha)
+            }
+            best = std::min(best, res);
+            if(best<=alpha){
+                cutAll=-1;
                 break;
+            }
         }
     }
 
 
-    if(bm==-1)
+    if(bm==-1){
         return static_evaluation(side);
+    }
+
+    zobrist[tail]=(hash^(side ? zblack : 0));
+    nodeEval[tail]=best;
+    nodeMove[tail][0]=candidateMoveStack[turn][bm][0];
+    nodeMove[tail][1]=candidateMoveStack[turn][bm][1];
+    nodeMove[tail][2]=candidateMoveStack[turn][bm][2];
+    nodeMove[tail][3]=candidateMoveStack[turn][bm][3];
+    nodeType[tail]=cutAll;
+    nodeDepth[tail]=0;
+
     return best;
 }
 
@@ -5108,12 +5341,12 @@ const int null_move_reduction = 3;
 
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
-    //std::cout<<turn<<" "<<alpha<<" "<<beta<<" "<<mdepth<<" "<<side<<std::endl;
     ++nodes;
     if (morale[0] <= 0)
         return morale[1] <= 0 ? 0 : -1000000;
     if (morale[1] <= 0)
         return 1000000;
+
     if (0 >= mdepth){
         if(DEBUG)
             std::cout<<"QUIESENSE BEGIN current state:"<<std::endl;
@@ -5122,17 +5355,67 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             std::cout<<"QUIESENSE EXXIT current state:"<<std::endl;
         return res;
     }
+
+    int best = 1000000*(-1+2*side);
+
+    int tail = (hash^(side ? zblack : 0))&hash_mask;
+    if(zobrist[tail]==(hash^(side ? zblack : 0))){
+        if(nodeDepth[tail]>=mdepth){
+            if(nodeType[tail]==0)
+                return nodeEval[tail];
+            if(side==0){
+                if(nodeType[tail]==1){
+                    if(nodeEval[tail]>=beta)
+                        return nodeEval[tail];
+                }
+                else{
+                    if(nodeEval[tail]<=alpha)
+                        return nodeEval[tail];
+                }
+            }
+            else{
+                if(nodeType[tail]==1){
+                    if(nodeEval[tail]>=beta)
+                        return nodeEval[tail];
+                }
+                else{
+                    if(nodeEval[tail]<=alpha)
+                        return nodeEval[tail];
+                }
+            }
+        }
+        
+        //try saved move
+        int eval;
+        makeMove(nodeMove[tail][0], nodeMove[tail][1], nodeMove[tail][2], nodeMove[tail][3]);
+        endOfTurnTriggers(side);    
+        ++turn;
+        if(side)
+            eval = evaluate(alpha, beta, mdepth-1, side^1);
+        else
+            eval = evaluate(alpha, beta, mdepth-1, side^1);
+        
+        --turn;
+        unmakeMoves(turn);
+
+        if(side==0){
+            if(eval>=beta)
+                return eval;
+        }
+        else{
+            if(eval<=alpha)
+                return eval;
+        }
+
+        best=eval;
+    }
+
     candidate_pointer[turn]=0;
     for(int i=0; i<pc_cnt; i++){
         if((pieces[i]&1)==side&&!death[i])
             generateMoves(i, px[i], py[i]);
     }
 
-    int best = 1000000*(-1+2*side);
-    if(side==0)
-        best=alpha;
-    else
-        best=beta;
 
     //null move
     //std::cout<<"NMR"<<std::endl;
@@ -5146,6 +5429,7 @@ int evaluate(int alpha, int beta, int mdepth, int side)
     
     int bm =-1;
     int res=-1;
+    short cutAll=0;
 
     initSelectionSort();
     for(int j=0; j<candidate_pointer[turn]; j++){
@@ -5164,9 +5448,9 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
         ++turn;
         if(side)
-            res = evaluate(alpha, best, mdepth-1, side^1);
+            res = evaluate(alpha, std::min(best, beta), mdepth-1, side^1);
         else
-            res = evaluate(best, beta, mdepth-1, side^1);
+            res = evaluate(std::max(alpha, best), beta, mdepth-1, side^1);
         
         --turn;
         if(DEBUG){
@@ -5176,24 +5460,28 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         unmakeMoves(turn);
 
         if(DEBUG)
-            printState();
-
+            printState();    
 
         if(side==0){
             if(res>best)
                 bm=i;
             best = std::max(best, res);
-            if(best>=beta)
+            if(best>=beta){
+                cutAll=1;
                 break;
+            }
         }
         else{
             if(res<best)
                 bm=i;
             best = std::min(best, res);
-            if(best<=alpha)
+            if(best<=alpha){
+                cutAll=-1;
                 break;
+            }
         }
     }
+
     if(turn==start_turn)
     {
         move_chosen[0]=candidateMoveStack[turn][bm][0];
@@ -5201,6 +5489,16 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         move_chosen[2]=candidateMoveStack[turn][bm][2];
         move_chosen[3]=candidateMoveStack[turn][bm][3];
     }
+
+    zobrist[tail]=(hash^(side ? zblack : 0));
+    nodeEval[tail]=best;
+    nodeMove[tail][0]=candidateMoveStack[turn][bm][0];
+    nodeMove[tail][1]=candidateMoveStack[turn][bm][1];
+    nodeMove[tail][2]=candidateMoveStack[turn][bm][2];
+    nodeMove[tail][3]=candidateMoveStack[turn][bm][3];
+    nodeType[tail]=cutAll;
+    nodeDepth[tail]=mdepth;
+
     return best;
 }
 
