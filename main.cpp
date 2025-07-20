@@ -5,13 +5,13 @@
 
 const bool DEBUG = false;
 
-const int hash_table_size = 16777216; //2^24
-const int hash_mask = hash_table_size-1;
+const int hash_table_size = 67108864; //2^26
+const long long hash_mask = hash_table_size-1;
 long long zblack;
 
 long long zobrist[hash_table_size] = {-1};
 int nodeEval[hash_table_size] = {}; 
-short nodeMove[hash_table_size][4] = {};
+short nodeMove[hash_table_size][5] = {}; 
 short nodeType[hash_table_size] = {}; //0 = normal, 1 = lower bound, -1 = upperbound
 short nodeDepth[hash_table_size] = {};
 
@@ -210,6 +210,8 @@ int piece_square_tables[11][8][8] =
 long long zstatus_id[200] = {};
 long long status_prime = 1000000007LL;
 long long zstatus(int pc_id){
+    if(DEBUG)
+        std::cout<<"STATUS HASH: "<<((status[pc_id])%status_prime)*zstatus_id[pc_id]<<"Piece: "<<pc_id<<" STATUS VALUE: "<<status[pc_id]<<std::endl;
     return ((status[pc_id])%status_prime)*zstatus_id[pc_id];
 }
 
@@ -225,26 +227,26 @@ void init(){
     for (int i = 0; i<8; i++)
         for(int j = 0; j<8; j++)
             for(int k=0; k<1200; k++)
-                zboard[i][j][k]= rnd();
+                zboard[i][j][k]= std::abs((long long)rnd());
     
     for(int i=0; i<8; i++)
         for(int j=0; j<8; j++){
-            zlightning[i][j]=rnd();
-            zmeteor[i][j]=rnd();
+            zlightning[i][j]=std::abs((long long)rnd());;
+            zmeteor[i][j]=std::abs((long long)rnd());;
         }
     
     for(int i=0; i<200; i++){
         znulled[i]=rnd();
         zvoided[i]=rnd();
-        zstatus_id[i]=rnd()%(1LL<<30);
+        zstatus_id[i]=std::abs((long long)rnd())%(1LL<<30);
     }
 
     for(int i=0; i<250; i++){
-        zmorale[0][i]=rnd();
-        zmorale[1][i]=rnd();
+        zmorale[0][i]=std::abs((long long)rnd());;
+        zmorale[1][i]=std::abs((long long)rnd());;
     }
 
-    zblack=rnd();
+    zblack=std::abs((long long)rnd());;
 }
 
 int candidateMoveStack[150][400][4] = {0};
@@ -3767,6 +3769,7 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     removePVT(capturedPiece, xx, yy);
     hash^=zmorale[capturedPiece&1][morale[capturedPiece&1]+50];
     hash^=zboard[xx][yy][capturedPiece];
+    hash^=zstatus(id_board[xx][yy]);
 
     morale[capturedPiece&1]-=pmorale[id_board[xx][yy]];
     board[xx][yy]=0;
@@ -4281,6 +4284,7 @@ void unmakeMoves(int tur){
                 board[xx][yy]=pieces[pc_id];
 
                 hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
+                hash^=zstatus(pc_id);
 
                 death[pc_id]=0;
                 id_board[xx][yy]=pc_id;
@@ -4521,16 +4525,19 @@ void processStatus(int pc_id, int side){
     undo_pnt[turn]++;
 
     hash^=zstatus(pc_id);
+
     status[pc_id]<<=1;
 
     //poison
     if(status[pc_id]&(1<<6)){
+        hash^=zstatus(pc_id);
         killPiece(px[pc_id], py[pc_id], -1, 1);
         return;
     }
 
     status[pc_id]&=(1LL<<37) - 1 - (1LL<<31) - (1LL<<20) - (1LL<<13) - (1LL<<6);
     hash^=zstatus(pc_id);
+
 
     //compel
     if((pieces[pc_id]&1)!=side&&isCompeled(pc_id)&&!isFrozen(pc_id)&&!isPetrified(pc_id))
@@ -5029,14 +5036,19 @@ void recalculate_evaluation(){
         throw std::logic_error("evaluation does not match");
     }
 }
+long long nodes=0;
 
 void check_state(){
     for(int i=0; i<pc_cnt; i++){
         if(death[i])
             continue;
         if(board[px[i]][py[i]]!=pieces[i]||id_board[px[i]][py[i]]!=i)
-            std::cout<<"FAIL "<<i<<" "<<px[i]<<" "<<py[i]<<" "<<pieces[i]<<" "<<death[i]<<std::endl;
+            std::cout<<"FAIL "<<i<<" "<<px[i]<<" "<<py[i]<<" "<<pieces[i]<<" "<<death[i]<<" "<<nodes<<std::endl;
     }
+}
+
+void regenerate_hash(){
+    
 }
 
 int static_evaluation(int side);
@@ -5044,6 +5056,7 @@ void printState(){
 
     std::cout<<"White morale: "<<morale[0]<<" "<<"Black morale: "<<morale[1]<<std::endl;
     std::cout<<static_evaluation(turn&1)<<std::endl;
+    std::cout<<"Hash: "<<hash<<std::endl;
     for(int y=7; y>=0; y--){
         for(int x=0; x<=7; x++){
             if(board[x][y]==0)
@@ -5177,7 +5190,6 @@ void quickSort(){
     std::sort(std::begin(quicksortArray[turn]), quicksortArray[turn] + candidate_pointer[turn], std::greater<int>());
 }*/
 
-long long nodes=0;
 int static_evaluation(int side){
     return (morale[0]-morale[1])*100 + (position_bonus[0]-position_bonus[1]);
 }
@@ -5185,6 +5197,8 @@ int static_evaluation(int side){
 long long quiesent_nodes=0;
 int quiesence(int alpha, int beta, int side)
 {
+    if(DEBUG)
+        printState();
     ++quiesent_nodes;
     if (morale[0] <= 0)
         return morale[1] <= 0 ? 0 : -1000000;
@@ -5227,7 +5241,7 @@ int quiesence(int alpha, int beta, int side)
         //try saved move
         /*
         int eval;
-        makeMove(nodeMove[tail][0], nodeMove[tail][1], nodeMove[tail][2], nodeMove[tail][3]);
+        makeMove(nodeMove[tail][0], nodeMove[tail][1], id_board[nodeMove[tail][2]][nodeMove[tail][3]], nodeMove[tail][4]);
         endOfTurnTriggers(side);    
         ++turn;
         if(side)
@@ -5290,13 +5304,15 @@ int quiesence(int alpha, int beta, int side)
             res = quiesence(std::max(alpha, best), beta, side^1);
     
         --turn;
+
         if(DEBUG){
             std::cout<<"Q UNMAKE "<<std::endl;
+        }
+        unmakeMoves(turn);
+        if(DEBUG){
             printState();
         }
 
-        unmakeMoves(turn);
-        
         if(!side){
             if(res>best)
                 bm=i;
@@ -5327,8 +5343,9 @@ int quiesence(int alpha, int beta, int side)
     nodeEval[tail]=best;
     nodeMove[tail][0]=candidateMoveStack[turn][bm][0];
     nodeMove[tail][1]=candidateMoveStack[turn][bm][1];
-    nodeMove[tail][2]=candidateMoveStack[turn][bm][2];
-    nodeMove[tail][3]=candidateMoveStack[turn][bm][3];
+    nodeMove[tail][2]=px[candidateMoveStack[turn][bm][2]];
+    nodeMove[tail][3]=py[candidateMoveStack[turn][bm][2]];
+    nodeMove[tail][4]=candidateMoveStack[turn][bm][3];
     nodeType[tail]=cutAll;
     nodeDepth[tail]=0;
 
@@ -5342,6 +5359,7 @@ const int null_move_reduction = 3;
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
     ++nodes;
+    long long hashl=hash;
     if (morale[0] <= 0)
         return morale[1] <= 0 ? 0 : -1000000;
     if (morale[1] <= 0)
@@ -5352,7 +5370,7 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             std::cout<<"QUIESENSE BEGIN current state:"<<std::endl;
         int res = quiesence(alpha, beta, side);
         if(DEBUG)
-            std::cout<<"QUIESENSE EXXIT current state:"<<std::endl;
+            std::cout<<"QUIESENSE EXIT current state:"<<std::endl;
         return res;
     }
 
@@ -5385,9 +5403,16 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             }
         }
         
+        if(DEBUG){
+            std::cout<<"CACHED MOVE:"<<std::endl;
+            std::cout<<nodeMove[tail][0]<<" "<<nodeMove[tail][1]<<" "<<id_board[nodeMove[tail][2]][nodeMove[tail][3]]<<" "<<nodeMove[tail][4]<<std::endl;
+            std::cout<<tail<<" "<<zobrist[tail]<<" "<<side<<" "<<(hash^zblack)<<std::endl;
+            printState();
+        }
+
         //try saved move
         int eval;
-        makeMove(nodeMove[tail][0], nodeMove[tail][1], nodeMove[tail][2], nodeMove[tail][3]);
+        makeMove(nodeMove[tail][0], nodeMove[tail][1], id_board[nodeMove[tail][2]][nodeMove[tail][3]], nodeMove[tail][4]);
         endOfTurnTriggers(side);    
         ++turn;
         if(side)
@@ -5462,6 +5487,12 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         if(DEBUG)
             printState();    
 
+        if(hash!=hashl){
+            printState();
+            throw std::logic_error("hash invalidated");
+        }
+
+
         if(side==0){
             if(res>best)
                 bm=i;
@@ -5494,10 +5525,12 @@ int evaluate(int alpha, int beta, int mdepth, int side)
     nodeEval[tail]=best;
     nodeMove[tail][0]=candidateMoveStack[turn][bm][0];
     nodeMove[tail][1]=candidateMoveStack[turn][bm][1];
-    nodeMove[tail][2]=candidateMoveStack[turn][bm][2];
-    nodeMove[tail][3]=candidateMoveStack[turn][bm][3];
+    nodeMove[tail][2]=px[candidateMoveStack[turn][bm][2]];
+    nodeMove[tail][3]=py[candidateMoveStack[turn][bm][2]];
+    nodeMove[tail][4]=candidateMoveStack[turn][bm][3];
     nodeType[tail]=cutAll;
     nodeDepth[tail]=mdepth;
+
 
     return best;
 }
@@ -5517,21 +5550,14 @@ const bool enterPos=true;
 int main()
 {
     init();
-    //loadPosition("56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28");
-    //loadPosition("56,Usernametaken12#5978,loading,3000,0,v56_replay,152,20,14,7,7,7,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Rook,Pawn,,,,,Pawn,Rook,Knight,Pawn,,,,,Pawn,Knight,Bishop,Pawn,,,,,Pawn,Bishop,King,Pawn,,,,,Pawn,Queen,Queen,Pawn,,,,,Pawn,King,Bishop,Pawn,,,,,Pawn,Bishop,Knight,Pawn,,,,,Pawn,Knight,Rook,Pawn,,,,,Pawn,Rook,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,50,34");
-    //loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,114,18,38,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Greed4,Bomber,,,,,Drake,Queen,Banshee4,Fireball2,,,,,Drake,HauntedArmor,SoulKeeper4,Fireball3,,,,,Drake,Wizard,King,Fireball2,,,,,Drake,Knight,Enchantress4,Fireball2,,,,,Drake,Knight,SoulKeeper4,Fireball3,,,,,Drake,Dragon,Banshee4,Fireball2,,,,,Militia,King,Greed4,Bomber,,,,,Militia,Dryad,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,44,5,21");
-    //loadPosition("56,Usernametaken12#5978,PrivateAccount,3000,2000,v56_replay,152,20,14,7,7,7,0,41,65,23,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Queen3,Mercenary,,,,,Drake,Warrior3,Berserker,Mercenary,,,,,Drake,Warrior3,Knight,Samurai,,,,,Samurai,Demon,Knight,Samurai,,,,,Samurai,King,King,Samurai,,,,,Samurai,Knight,Demon,Samurai,,,,,Samurai,Knight,Warrior3,Drake,,,,,Mercenary,Berserker,Warrior3,Drake,,,,,Mercenary,Queen3,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,54,46");
-    //loadPosition("54,whitename,blackname,2500,2500,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Pawn,,,,,Drake,Warrior,Bishop,Pawn,,,,,Drake,Warrior,Wizard,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Warrior,Knight,Militia,,,,,Drake,King,Knight,Militia,,,,,Drake,Demon,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0");
-    //loadPosition("56,Usernametaken12#5978,loading,3000,0,v56_replay,152,20,14,7,7,7,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Queen3,Drake,,,,,Axeman,King,Berserker,Drake,,,,,Axeman,Knight,Knight,Samurai,,,,,Samurai,Demon,Warrior3,Samurai,,,,,Samurai,Warrior3,Warrior3,Samurai,,,,,Samurai,Warrior3,Demon,Samurai,,,,,Samurai,Knight,Knight,Axeman,,,,,Drake,Berserker,King,Axeman,,,,,Drake,Queen3,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,43");
-    //loadPosition("57,Player1,Player2,2000,2000,v57_scenario,1,1,1,1,1,1,0,1,1,1,1,1,1,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Spearman,,,,,Drake,Demon,Bishop,Spearman,,,,,Drake,King,Rook,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Ranger,Knight,Spearman,,,,,Drake,AirElemental,Knight,Spearman,,,,,Drake,Pyromancer,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0");
-    //loadPosition("56,devbot#9202,PrivateAccount,0,2000,v56_replay,129,16,31,30,28,24,0,45,67,30,1,2,3,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Knight,Spearman,,,,,Drake,Demon,Bishop,Spearman,,,,,Drake,King,Rook,Pawn,,,,,Samurai,Warrior,Queen,Pawn,,,,,Samurai,Knight,King,Pawn,,,,,Samurai,Knight,Rook,Pawn,,,,,Samurai,Ranger,Knight,Spearman,,,,,Drake,AirElemental,Knight,Spearman,,,,,Drake,Pyromancer,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,54,46");
-    //loadPosition("54,whitename,blackname,2500,2500,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,,Drake,,,,,Drake,Pyromancer,,Drake,,,,,Drake,AirElemental,,Samurai,,,,,Samurai,Ranger,,Samurai,,,,,Samurai,Knight,,Samurai,,,,,Samurai,Knight,Warrior,Samurai,,,,,Samurai,Warrior,King,Drake,,,,,Drake,King,,Drake,,,,,Drake,Demon,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0");
     int side=0;
+    int depth=0;
     if(enterPos){
         std::string position;
         std::cin>>position;
         loadPosition(position);
         std::cin>>side;
+        std::cin>>depth;
     }
     /*if(true){
         printState();
@@ -5552,7 +5578,9 @@ int main()
     printState();
     while(true){
         auto start = std::chrono::system_clock::now();
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, 6, side)<<std::endl;
+        for(int i=2; i<depth; i++)
+            evaluate(-1000000, 1000000, i, side);    
+        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, depth, side)<<std::endl;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
