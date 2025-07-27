@@ -65,6 +65,9 @@ int king_id[2] = {-1, -1};
 
 long long hash=0;
 
+//indexed by turn used -> always set +1
+int last_moved[200] = {};
+
 //first value is a spacer! 
 bool freeze_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1};
 bool petrify_immune[1050] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1};
@@ -246,7 +249,9 @@ void init(){
         zmorale[1][i]=std::abs((long long)rnd());;
     }
 
-    zblack=std::abs((long long)rnd());;
+    zblack=std::abs((long long)rnd());
+
+    last_moved[0]=-1;
 }
 
 int candidateMoveStack[150][400][4] = {0};
@@ -4068,7 +4073,7 @@ void unenchant(int xx, int yy, int pc_id){
 
 //uses the refined list of 31 moves -> 10 or so operations
 void makeMove(int xx, int yy, int pc_id, int moveType){
-    //std::cout<<xx<<" "<<yy<<" "<<pc_id<<" "<<moveType<<std::endl;
+    last_moved[turn+1]=pc_id;
     switch(moveType){
         case 1: //move
             moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
@@ -5095,8 +5100,8 @@ int moveScore(int mnum){
         case 1: //move
             return 0;
         case 2: //attack
-            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100;
-        case 3:
+            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
+        case 3: //swap
             return -1;
         case 4:
             return -1;
@@ -5105,11 +5110,11 @@ int moveScore(int mnum){
         case 6:
             return 3;
         case 7:
-            return agrobonus + pmorale[id_board[xx][yy]]*100-300;
+            return agrobonus + pmorale[id_board[xx][yy]]*100-300 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 8:
-            return agrobonus + pmorale[id_board[xx][yy]]*100-300;
+            return agrobonus + pmorale[id_board[xx][yy]]*100-300 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 9:
-            return agrobonus + pmorale[id_board[xx][yy]]*100-100;
+            return agrobonus + pmorale[id_board[xx][yy]]*100-100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 10:
             return 1;
         case 11:
@@ -5119,13 +5124,13 @@ int moveScore(int mnum){
         case 13:
             return 2;
         case 14:
-            return agrobonus + pmorale[id_board[xx][yy]]*100+100;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 15:
-            return agrobonus + pmorale[id_board[xx][yy]]*100+150;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+150 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 16:
-            return agrobonus + pmorale[id_board[xx][yy]]*100+200;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+200 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 17:
-            return agrobonus + pmorale[id_board[xx][yy]]*100+300;
+            return agrobonus + pmorale[id_board[xx][yy]]*100+300 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 18:
             return -2;
         case 19:
@@ -5143,19 +5148,19 @@ int moveScore(int mnum){
         case 25:
             return -300;
         case 26:
-            return agrobonus + (pmorale[id_board[xx][yy]] - pmorale[pc_id])*100;
+            return agrobonus + (pmorale[id_board[xx][yy]] - pmorale[pc_id])*100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 27:
             return -10;
         case 28: 
-            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100;
+            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 29:
             return agrobonus +  200*pmorale[id_board[xx][yy]];
         case 30:
-            return agrobonus + (pmorale[id_board[xx][yy]] - pmorale[pc_id])*100;
+            return agrobonus + (pmorale[id_board[xx][yy]] - pmorale[pc_id])*100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 31:
             return -100;
         case 32:
-            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100;
+            return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         default:
             throw std::invalid_argument( "unexpected move type" ); 
     }
