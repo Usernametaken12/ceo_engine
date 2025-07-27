@@ -1053,6 +1053,8 @@ void stonemage(int moveType, int piece, int pc_id, int x, int y){
 
 void generateMoves(int pc_id, int x, int y)
 {
+    if(isFrozen(pc_id)||isPetrified(pc_id))
+        return;
     //std::cout<<pc_id<<" "<<x<<" "<<y<<std::endl;
     int piece = pieces[pc_id];
     switch ((piece ^ (piece & 1)))
@@ -4712,7 +4714,7 @@ int getEncoding(std::string name)
         res = 58;
     else if (name == "Duelist")
         res = 66;
-    else if (name == "NA")
+    else if (name == "**Duelist")
         res = 74;
     else if (name == "Fireball")
         res = 82;
@@ -4764,7 +4766,7 @@ int getEncoding(std::string name)
         res = 266;
     else if (name == "Crusader")
         res = 274;
-    else if (name == "NA2")
+    else if (name == "**Crusader")
         res = 282;
     else if (name == "Dove")
         res = 290;
@@ -4772,7 +4774,7 @@ int getEncoding(std::string name)
         res = 298;
     else if (name == "Fencer")
         res = 306;
-    else if (name == "NA3")
+    else if (name == "**Fencer")
         res = 314;
     else if (name == "FireMage")
         res = 322;
@@ -4852,7 +4854,7 @@ int getEncoding(std::string name)
         res = 618;
     else if (name == "HauntedArmor")
         res = 626;
-    else if (name == "NA4")
+    else if (name == "**HauntedArmor")
         res = 634;
     else if (name == "LifeStone")
         res = 642;
@@ -4870,7 +4872,7 @@ int getEncoding(std::string name)
         res = 690;
     else if (name == "Phalanx")
         res = 698;
-    else if (name == "NA5")
+    else if (name == "**Phalanx")
         res = 706;
     else if (name == "Queen")
         res = 714;
@@ -5354,7 +5356,7 @@ int quiesence(int alpha, int beta, int side)
 
 int start_turn=0;
 int move_chosen[4]={};
-const int null_move_reduction = 3;
+const int null_move_reduction = 2;
 
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
@@ -5444,13 +5446,13 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
     //null move
     //std::cout<<"NMR"<<std::endl;
-    /*turn++;
-    int null_move_value = evaluate(alpha, beta, mdepth-null_move_reduction, side^1);
+    turn++;
+    int null_move_value = evaluate(alpha, beta, mdepth-1-null_move_reduction, side^1);
     turn--;
     if(side==0&&null_move_value>=beta)
-        return beta;
+        return null_move_value;
     if(side==1&&null_move_value<=alpha)
-        return alpha;*/
+        return null_move_value;
     
     int bm =-1;
     int res=-1;
@@ -5472,10 +5474,16 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         endOfTurnTriggers(side);    
 
         ++turn;
-        if(side)
-            res = evaluate(alpha, std::min(best, beta), mdepth-1, side^1);
-        else
-            res = evaluate(std::max(alpha, best), beta, mdepth-1, side^1);
+        if(side){
+            res = evaluate(alpha, std::min(best, beta), mdepth-1-(j>2&&depth>2 ? 1 : 0), side^1);
+            if(j>2&&depth>2&&res<best)
+                res = evaluate(alpha, std::min(best, beta), mdepth-1, side^1);
+        }
+        else{
+            res = evaluate(std::max(alpha, best), beta, mdepth-1-(j>2&&depth>2 ? 1 : 0), side^1);
+            if(j>2&&depth>2&&res>best)
+                res = evaluate(std::max(alpha, best), beta, mdepth-1, side^1);
+        }
         
         --turn;
         if(DEBUG){
@@ -5515,20 +5523,31 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
     if(turn==start_turn)
     {
-        move_chosen[0]=candidateMoveStack[turn][bm][0];
-        move_chosen[1]=candidateMoveStack[turn][bm][1];
-        move_chosen[2]=candidateMoveStack[turn][bm][2];
-        move_chosen[3]=candidateMoveStack[turn][bm][3];
+        if(bm==-1)
+        {
+            move_chosen[0]=nodeMove[tail][0];
+            move_chosen[1]=nodeMove[tail][1];
+            move_chosen[2]=id_board[nodeMove[tail][2]][nodeMove[tail][3]];
+            move_chosen[3]=nodeMove[tail][4];
+        }
+        else{
+            move_chosen[0]=candidateMoveStack[turn][bm][0];
+            move_chosen[1]=candidateMoveStack[turn][bm][1];
+            move_chosen[2]=candidateMoveStack[turn][bm][2];
+            move_chosen[3]=candidateMoveStack[turn][bm][3];
+        }
     }
 
     zobrist[tail]=(hash^(side ? zblack : 0));
     nodeEval[tail]=best;
-    nodeMove[tail][0]=candidateMoveStack[turn][bm][0];
-    nodeMove[tail][1]=candidateMoveStack[turn][bm][1];
-    nodeMove[tail][2]=px[candidateMoveStack[turn][bm][2]];
-    nodeMove[tail][3]=py[candidateMoveStack[turn][bm][2]];
-    nodeMove[tail][4]=candidateMoveStack[turn][bm][3];
-    nodeType[tail]=cutAll;
+    if(bm!=-1){
+        nodeMove[tail][0]=candidateMoveStack[turn][bm][0];
+        nodeMove[tail][1]=candidateMoveStack[turn][bm][1];
+        nodeMove[tail][2]=px[candidateMoveStack[turn][bm][2]];
+        nodeMove[tail][3]=py[candidateMoveStack[turn][bm][2]];
+        nodeMove[tail][4]=candidateMoveStack[turn][bm][3];
+        nodeType[tail]=cutAll;
+    }
     nodeDepth[tail]=mdepth;
 
 
@@ -5550,6 +5569,7 @@ const bool enterPos=true;
 int main()
 {
     init();
+    hash=1;
     int side=0;
     int depth=0;
     if(enterPos){
