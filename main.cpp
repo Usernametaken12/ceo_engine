@@ -3408,6 +3408,10 @@ void removePVT(int pc, int x, int y){
     position_bonus[pc&1]-=piece_square_tables[piece_type[pc/2]][pc&1 ? y : 7-y][x];
 }
 
+int predictPVT(int pc, int x, int y, int xx, int yy){
+    return piece_square_tables[piece_type[pc/2]][pc&1 ? yy : 7-yy][xx] - piece_square_tables[piece_type[pc/2]][pc&1 ? y : 7-y][x];
+}
+
 /*
 56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28
 
@@ -5098,7 +5102,7 @@ int moveScore(int mnum){
     int pc_id = candidateMoveStack[turn][mnum][2];
     switch(candidateMoveStack[turn][mnum][3]){
         case 1: //move
-            return 0;
+            return predictPVT(pieces[pc_id], px[pc_id], py[pc_id], xx, yy);
         case 2: //attack
             return agrobonus + (pmorale[id_board[xx][yy]]-pmorale[pc_id])*100 + agrobonus*(id_board[xx][yy]==last_moved[turn]);
         case 3: //swap
