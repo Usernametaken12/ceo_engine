@@ -4674,7 +4674,7 @@ void endOfTurnTriggers(int side){
     side^=1;
     for(int i=0; i<samuraiPnt[side]; i++){
         int id=samuraiList[side][i];
-        if(death[id]||pieces[id]<474||pieces[id]>481)
+        if(death[id]||pieces[id]<474||pieces[id]>481||isFrozen(id)||isPetrified(id))
             continue;
         if(board[px[id]][py[id]+1-2*side]!=0&&(board[px[id]][py[id]+1-2*side]&1)!=side)
             makeMove(px[id], py[id]+1-2*side, id, 2);
