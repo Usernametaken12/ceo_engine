@@ -47,6 +47,9 @@ extern bool voided[200]; //yes
 extern bool nulled[200]; //yes
 extern bool transparent[200]; //no
 
+extern long long zstatus_id[200];
+extern const long long status_prime;
+
 extern long long zvoided[200];
 extern long long znulled[200];
 extern long long zmorale[2][250]; //starts at -50
@@ -92,4 +95,9 @@ extern int candidate_pointer[150];
 extern int undostack[200][200][6];
 extern int undo_pnt[200];
 
+extern int start_turn;
+extern int move_chosen[4];
+
+extern long long nodes;
+extern long long quiesent_nodes;
 #endif

@@ -46,6 +46,9 @@ bool voided[200] = {}; //yes
 bool nulled[200] = {}; //yes
 bool transparent[200] = {}; //no
 
+long long zstatus_id[200] = {};
+extern const long long status_prime = 1000000007LL;
+
 long long zvoided[200] = {};
 long long znulled[200] = {};
 long long zmorale[2][250] = {}; //starts at -50
@@ -212,3 +215,9 @@ int candidate_pointer[150] = {};
 
 int undostack[200][200][6] = {};
 int undo_pnt[200] = {};
+
+int start_turn=0;
+int move_chosen[4]={};
+
+long long nodes=0;
+long long quiesent_nodes=0;
