@@ -47,8 +47,6 @@ void init(){
     last_moved[0]=-1;
 }
 
-int candidateMoveStack[150][400][4] = {0};
-int candidate_pointer[150] = {};
 
 void addMove(int xx, int yy, int pc_id, int nMoveType)
 {
@@ -3221,8 +3219,6 @@ void payMorale(int side, int qnt);
 void replacePiece(int xx, int yy, int pc_id, int nPieceType);
 void increaseValue(int pc_id, int amount);
 
-int undostack[200][200][6] = {};
-int undo_pnt[200] = {};
 
 void moveToSquare(int x, int y, int xx, int yy, int pc_id){
     //std::cout<<"move "<<x<<" "<<y<<" "<<xx<<" "<<yy<<std::endl;

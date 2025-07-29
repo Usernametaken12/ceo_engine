@@ -86,4 +86,10 @@ extern int position_bonus[2];
 extern const int piece_type[1050];
 extern const int piece_square_tables[11][8][8];
 
+extern int candidateMoveStack[150][400][4];
+extern int candidate_pointer[150];
+
+extern int undostack[200][200][6];
+extern int undo_pnt[200];
+
 #endif

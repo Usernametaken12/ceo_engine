@@ -206,3 +206,9 @@ extern const int piece_square_tables[11][8][8] =
         {-600,-590,-580,-560,-560,-580,-590,-600}
     }
 };
+
+int candidateMoveStack[150][400][4] = {};
+int candidate_pointer[150] = {};
+
+int undostack[200][200][6] = {};
+int undo_pnt[200] = {};
