@@ -3182,14 +3182,11 @@ void increaseValue(int pc_id, int amount);
 
 
 void moveToSquare(int x, int y, int xx, int yy, int pc_id){
-    //std::cout<<"move "<<x<<" "<<y<<" "<<xx<<" "<<yy<<std::endl;
     if(yy==7&&(pieces[pc_id]&1)==0&&promotions[board[x][y]/2]!=0)
         replacePiece(x, y, pc_id, board[x][y]+promotions[board[x][y]/2]);
     if(yy==0&&((pieces[pc_id]&1)==1)&&promotions[board[x][y]/2]!=0){
         replacePiece(x, y, pc_id, board[x][y]+promotions[board[x][y]/2]);
-        //std::cout<<"PROMOTE"<<std::endl;
     }
-    //std::cout<<"move "<<x<<" "<<y<<" "<<xx<<" "<<yy<<" "<<promotions[board[x][y]/2]<<" "<<((pieces[pc_id]&1)==1)<<" "<<(yy==0&&(pieces[pc_id]&1)==1&&promotions[board[x][y]/2]!=0)<<std::endl;
     
     if(!death[pc_id]){
         removePVT(pieces[pc_id], x, y);

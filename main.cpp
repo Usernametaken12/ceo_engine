@@ -55,22 +55,7 @@ int main()
         std::cin>>side;
         std::cin>>depth;
     }
-    /*if(true){
-        printState();
-        int xx, yy, id, mt;
-        std::cin>>xx>>yy>>id>>mt;
-        makeMove(xx, yy, id, mt);
-        endOfTurnTriggers(side);
 
-        std::cout<<"OPERATIONS: "<<std::endl;
-        for(int i=0; i<undo_pnt[turn]; i++)
-            std::cout<<undostack[turn][i][0]<<" "<<undostack[turn][i][1]<<" "<<undostack[turn][i][2]<<" "<<undostack[turn][i][3]<<" "<<undostack[turn][i][4]<<" "<<undostack[turn][i][5]<<std::endl;
-        
-        printState();
-        unmakeMoves(turn);
-        printState();
-        return 1;
-    }*/
     printState();
     while(true){
         auto start = std::chrono::system_clock::now();
@@ -88,18 +73,43 @@ int main()
         makeChosenMove();
         endOfTurnTriggers(side);
 
-        if(true){
-            std::cout<<"OPERATIONS: "<<std::endl;
-            for(int i=0; i<undo_pnt[turn]; i++)
-                std::cout<<undostack[turn][i][0]<<" "<<undostack[turn][i][1]<<" "<<undostack[turn][i][2]<<" "<<undostack[turn][i][3]<<" "<<undostack[turn][i][4]<<" "<<undostack[turn][i][5]<<std::endl;
-        }
+        std::cout<<"OPERATIONS: "<<std::endl;
+        for(int i=0; i<undo_pnt[turn]; i++)
+            std::cout<<undostack[turn][i][0]<<" "<<undostack[turn][i][1]<<" "<<undostack[turn][i][2]<<" "<<undostack[turn][i][3]<<" "<<undostack[turn][i][4]<<" "<<undostack[turn][i][5]<<std::endl;
         
         start_turn++;
         turn++;
         printState();
         printChosenMove();
+
         int xx, yy, id, mt;
-        std::cin>>xx>>yy>>id>>mt;
+
+        while(true){
+            int mode;
+            std::cin>>mode;
+            if(mode==-1){
+                std::string option;
+                std::cin>>option;
+                if(option=="depth"){
+                    std::cin >> depth;
+                    std::cout << "NEW DEPTH: "<<depth <<std::endl;
+                }
+                if(option=="undo"){
+                    turn--;
+                    start_turn--;
+                    unmakeMoves(turn);
+                    turn--;
+                    start_turn--;
+                    unmakeMoves(turn);
+                    printState();
+                }
+            }
+            else{
+                xx=mode;
+                break;
+            }
+        }
+        std::cin>>yy>>id>>mt;
         makeMove(xx, yy, id, mt);
         endOfTurnTriggers(1-side);
         turn++;
