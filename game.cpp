@@ -1,6 +1,4 @@
 #include "const_global.h"
-#include "engine.h"
-#include "utils.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -3169,7 +3167,7 @@ void removePVT(int pc, int x, int y){
 
 
 */
-void moveToSquare(int x, int y, int xx, int yy, int pc_id);
+void moveToSquare(int x, int y, int xx, int yy, int pc_id, bool normalMove);
 void killPiece(int xx, int yy, int pc_id, int killType);
 void swap(int x, int y, int xx, int yy, int pc_id);
 void inflictStatus(int nstatus, int xx, int yy, int pc_id);
@@ -3180,8 +3178,34 @@ void payMorale(int side, int qnt);
 void replacePiece(int xx, int yy, int pc_id, int nPieceType);
 void increaseValue(int pc_id, int amount);
 
+void printState();
+void moveToSquare(int x, int y, int xx, int yy, int pc_id, bool normalMove=true){
+    //hoplite move together
+    if(pieces[pc_id]<130 && pieces[pc_id]>=122 && normalMove && !death[pc_id]){
+        //printState();
+        int dx = xx-x;
+        int dy = yy-y;
 
-void moveToSquare(int x, int y, int xx, int yy, int pc_id){
+        if(pieces[pc_id]&1)
+            for(int yyy=std::max(0, y-1); yyy<=std::min(7, y+1); yyy++)
+                for(int xxx=std::max(0, x-1); xxx<=std::min(7, x+1); xxx++){
+                    if(board[xxx][yyy]>=130||board[xxx][yyy]<122||death[id_board[xxx][yyy]])
+                        continue;
+                    if(xxx+dx>=0 && xxx+dx<=7 && yyy+dy>=0 && yyy+dy<=7 && board[xxx+dx][yyy+dy]==0)
+                        moveToSquare(xxx, yyy, xxx+dx, yyy+dy, id_board[xxx][yyy], false);
+                }
+        else
+            for(int yyy=std::min(7, y+1); yyy>=std::max(0, y-1); yyy--)
+                for(int xxx=std::max(0, x-1); xxx<=std::min(7, x+1); xxx++){
+                    if(board[xxx][yyy]>=130||board[xxx][yyy]<122||death[id_board[xxx][yyy]])
+                        continue;
+                    if(xxx+dx>=0 && xxx+dx<=7 && yyy+dy>=0 && yyy+dy<=7 && board[xxx+dx][yyy+dy]==0)
+                        moveToSquare(xxx, yyy, xxx+dx, yyy+dy, id_board[xxx][yyy], false);
+                }
+        return;
+    }
+
+
     if(yy==7&&(pieces[pc_id]&1)==0&&promotions[board[x][y]/2]!=0)
         replacePiece(x, y, pc_id, board[x][y]+promotions[board[x][y]/2]);
     if(yy==0&&((pieces[pc_id]&1)==1)&&promotions[board[x][y]/2]!=0){
@@ -3193,6 +3217,7 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id){
         addPVT(pieces[pc_id], xx, yy);
     }
     
+
     board[xx][yy]=board[x][y];
     id_board[xx][yy]=pc_id;
     board[x][y]=0;
@@ -3364,8 +3389,8 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 294:
         case 296:{
             for(int dx=std::max(-1, -1*xx); dx<=std::min(1, 7-xx); dx++)
-                for(int dy=std::max(-1, -1*yy); dx<=std::min(1, 7-yy); dy++)
-                    if((board[xx+dx][yy+dy]^(capturedPiece&1))==0 && isChampion[board[xx+dx][yy+dy]/2])
+                for(int dy=std::max(-1, -1*yy); dy<=std::min(1, 7-yy); dy++)
+                    if(((board[xx+dx][yy+dy]&1)^(capturedPiece&1))==0 && isChampion[board[xx+dx][yy+dy]/2])
                         inflictStatus(32, xx+dx, yy+dy, id_board[xx+dx][yy+dy]);
         }
         case 330: //frostmphit
@@ -3441,13 +3466,14 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 702:
         case 704:
         {
+            if(killType!=0)
+                break; 
             int dx = xx-px[pc_id];
             if(dx==0)
                 break;
             int dy = yy-py[pc_id];
             if(std::abs(dx)<=2&&std::abs(dy)+std::abs(dx)==3)
-                if(killType==0)
-                    killPiece(px[pc_id], py[pc_id], -1, -1);
+                killPiece(px[pc_id], py[pc_id], -1, -1);
             break;
         }    
         case 794: //angel
@@ -3549,8 +3575,8 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     //dove
     for(int i=0; i<dovePnt[capturedPiece&1]; i++){
         int dove = doveList[capturedPiece&1][i];
-        if(death[dove] || pieces[dove]<290 || pieces[dove]>=298)
-            if(board[px[dove]][py[dove]+1-2*(capturedPiece&1)]==0)
+        if(!death[dove] && pieces[dove]>=290 && pieces[dove]<298)
+            if(board[px[dove]][py[dove]+1-2*(capturedPiece&1)]==0 && (px[dove]!=xx || py[dove]+1-2*(capturedPiece&1)!=yy))
                 moveToSquare(px[dove], py[dove], px[dove], py[dove]+1-2*(capturedPiece&1), dove);
     }
 
@@ -3625,7 +3651,7 @@ void pushPiece(int x, int y, int xx, int yy, int pc_id, int dis=3){
         break;
     }
     if(lvx!=xx||lvy!=yy)
-        moveToSquare(xx, yy, lvx, lvy, id_board[xx][yy]);
+        moveToSquare(xx, yy, lvx, lvy, id_board[xx][yy], false);
     
     //sylph promote
     if(pieces[pc_id]>=498 && pieces[pc_id]<504 && ((board[lvx][lvy]^pieces[pc_id])&1)){
@@ -3831,7 +3857,7 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
             break;
         case 2: //take
             killPiece(xx, yy, pc_id);
-            moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
+            moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id, false);
             if(isEnchanted(pc_id))
                 unenchant(xx, yy, pc_id);
             break;
@@ -3984,7 +4010,7 @@ void makeMove(int xx, int yy, int pc_id, int moveType){
                 }
             }
             killPiece(xx, yy, pc_id);
-            moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id);
+            moveToSquare(px[pc_id], py[pc_id], xx, yy, pc_id, false);
             if(isEnchanted(pc_id))
                 unenchant(xx, yy, pc_id);
             break;
@@ -4300,7 +4326,7 @@ void processStatus(int pc_id, int side){
     //compel
     if((pieces[pc_id]&1)!=side&&isCompeled(pc_id)&&!isFrozen(pc_id)&&!isPetrified(pc_id))
         if(board[px[pc_id]][py[pc_id]+1-2*side]==0)
-            moveToSquare(px[pc_id],py[pc_id], px[pc_id], py[pc_id]+1-2*side, pc_id);
+            moveToSquare(px[pc_id],py[pc_id], px[pc_id], py[pc_id]+1-2*side, pc_id, false);
 }
 
 //order: poison, freeze, petrify, compel, meteor, butterfly, lightning, lust, alch, samurai
@@ -4386,7 +4412,7 @@ void endOfTurnTriggers(int side){
                 continue;
             for(int yy=-1; yy<=1; yy++)
                 if(y+2*yy>=0&&y+2*yy<8&&board[x+2*xx][y+2*yy]!=0&&(board[x+2*xx][y+2*yy]&1)!=side&&board[x+xx][y+yy]==0){
-                    moveToSquare(2*xx+x, 2*yy+y, xx+x, yy+y, id_board[2*xx+x][2*yy+y]);
+                    moveToSquare(2*xx+x, 2*yy+y, xx+x, yy+y, id_board[2*xx+x][2*yy+y], false);
                 }
                     
         }
