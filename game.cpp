@@ -108,14 +108,14 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
             dy = dy < 0 ? -1 : dy > 0 ? 1
                                       : 0;
             for(int i=1; i<=3; i++){
-                if(xx+dx*i<0||xx+dx*i>7||yy+dy*i<0||yy+dy*i>7)
+                if(xx+dx*i<0 || xx+dx*i>7 || yy+dy*i<0 || yy+dy*i>7)
                     break;
                 if(board[xx+dx*i][yy+dy*i]==0){
                     addMove(xx, yy, pc_id, 13);
                     break;
                 }
                 else{
-                    if(board[xx+dx*i][yy+dy*i]&2024)
+                    if(transparent[id_board[xx+dx*i][yy+dy*i]])
                         continue;
                     else
                         break;
@@ -3306,16 +3306,16 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
                 swap(px[pc_id], py[pc_id], px[king_id[(takingPiece^1)&1]], py[king_id[(takingPiece^1)&1]], pc_id);
             break;
         case 722: //reaver
-            payMorale((takingPiece&1)^1, 3);
+            payMorale((takingPiece&1), 3);
             break;
         case 724:
-            payMorale((takingPiece&1)^1, 4);
+            payMorale((takingPiece&1), 5);
             break;
         case 726: 
-            payMorale((takingPiece&1)^1, 7);
+            payMorale((takingPiece&1), 7);
             break;
         case 728:
-            payMorale((takingPiece&1)^1, 9);
+            payMorale((takingPiece&1), 9);
             break;
         case 842: //fireelemental
             increaseValue(pc_id, 3);
@@ -3649,13 +3649,13 @@ void pushPiece(int x, int y, int xx, int yy, int pc_id, int dis=3){
     int lvx=xx;
     int lvy=yy;
     for(int i=1; i<=dis; i++){
-        if(0<=xx+xdif*i&&xx+xdif*i<=7&&yy+ydif*i>=0&&yy+ydif*i<=7)
-            break;
-        else if(board[xx+xdif*i][yy+ydif*i]==0){
+        if(0>xx+xdif*i || xx+xdif*i>7 || yy+ydif*i<0 || yy+ydif*i>7)
+            continue;
+        if(board[xx+xdif*i][yy+ydif*i]==0){
             lvx=xx+xdif*i;
             lvy=yy+ydif*i;
         }
-        else if(board[xx+xdif*i][yy+ydif*i]&&transparent[id_board[xx][yy]])
+        else if(board[xx+xdif*i][yy+ydif*i] && transparent[id_board[xx][yy]])
             continue;
         break;
     }
