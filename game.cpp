@@ -4,6 +4,8 @@
 #include <string.h>
 #include <bits/stdc++.h>
 
+void printState();
+
 long long zstatus(int pc_id){
     if(DEBUG)
         std::cout<<"STATUS HASH: "<<((status[pc_id])%status_prime)*zstatus_id[pc_id]<<"Piece: "<<pc_id<<" STATUS VALUE: "<<status[pc_id]<<std::endl;
@@ -3178,7 +3180,6 @@ void payMorale(int side, int qnt);
 void replacePiece(int xx, int yy, int pc_id, int nPieceType);
 void increaseValue(int pc_id, int amount);
 
-void printState();
 void moveToSquare(int x, int y, int xx, int yy, int pc_id, bool normalMove=true){
     //hoplite move together
     if(pieces[pc_id]<130 && pieces[pc_id]>=122 && normalMove && !death[pc_id]){
@@ -3189,7 +3190,7 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id, bool normalMove=true)
         if(pieces[pc_id]&1)
             for(int yyy=std::max(0, y-1); yyy<=std::min(7, y+1); yyy++)
                 for(int xxx=std::max(0, x-1); xxx<=std::min(7, x+1); xxx++){
-                    if(board[xxx][yyy]>=130||board[xxx][yyy]<122||death[id_board[xxx][yyy]])
+                    if(board[xxx][yyy]>=130||board[xxx][yyy]<122||death[id_board[xxx][yyy]]||(board[xxx][yyy]^board[xx][yy])&1)
                         continue;
                     if(xxx+dx>=0 && xxx+dx<=7 && yyy+dy>=0 && yyy+dy<=7 && board[xxx+dx][yyy+dy]==0)
                         moveToSquare(xxx, yyy, xxx+dx, yyy+dy, id_board[xxx][yyy], false);
@@ -3242,6 +3243,9 @@ void moveToSquare(int x, int y, int xx, int yy, int pc_id, bool normalMove=true)
 void killPiece(int xx, int yy, int pc_id, int killType=0){
     int takingPiece= pc_id==-1 ? 0 : pieces[pc_id];
     int capturedPiece=board[xx][yy];
+    if(takingPiece!=0&&((takingPiece^capturedPiece)&1)==0){
+        throw std::logic_error("captured own piece??");
+    }
     switch(takingPiece&(2048-2)){
         case 34: //bat
         case 36:
@@ -3255,12 +3259,6 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
         case 54:
         case 56:
             killPiece(px[pc_id], py[pc_id], -1, -1);
-            break;
-        case 82: //fireball //incorrect behavior supposed to "vanish" 
-        case 84:
-        case 86:
-        case 88:
-            killPiece(px[pc_id], py[pc_id], -1);
             break;
         case 186: //slime
         case 188:
@@ -3562,6 +3560,15 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
 
     hash^=zmorale[capturedPiece&1][morale[capturedPiece&1]+50];
 
+    switch(takingPiece&(2048-2)){
+        case 82: //fireball //incorrect behavior supposed to "vanish" 
+        case 84:
+        case 86:
+        case 88:
+            killPiece(px[pc_id], py[pc_id], -1);
+            break;
+    }
+
     switch(capturedPiece&(2048-2)){
         case 946: //phoenix
         case 948:
@@ -3573,11 +3580,11 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     }
     
     //dove
-    for(int i=0; i<dovePnt[capturedPiece&1]; i++){
-        int dove = doveList[capturedPiece&1][i];
+    for(int i=0; i<dovePnt[takingPiece&1]; i++){
+        int dove = doveList[takingPiece&1][i];
         if(!death[dove] && pieces[dove]>=290 && pieces[dove]<298)
-            if(board[px[dove]][py[dove]+1-2*(capturedPiece&1)]==0 && (px[dove]!=xx || py[dove]+1-2*(capturedPiece&1)!=yy))
-                moveToSquare(px[dove], py[dove], px[dove], py[dove]+1-2*(capturedPiece&1), dove);
+            if(board[px[dove]][py[dove]+1-2*(takingPiece&1)]==0 && (px[dove]!=xx || py[dove]+1-2*(takingPiece&1)!=yy))
+                moveToSquare(px[dove], py[dove], px[dove], py[dove]+1-2*(takingPiece&1), dove);
     }
 
     return;
