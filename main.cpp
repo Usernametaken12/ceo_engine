@@ -47,21 +47,39 @@ int main()
     init();
     hash=1;
     int side=0;
-    int depth=0;
+    int depth=1000;
+    int allowed_time=60;
     if(enterPos){
         std::string position;
+        std::string eval_type;
         std::cin>>position;
         loadPosition(position);
         std::cin>>side;
-        std::cin>>depth;
+        std::cin>>eval_type;
+        if(eval_type=="depth")
+            std::cin>>depth;
+        else
+            std::cin>>allowed_time;
     }
 
     printState();
     while(true){
         auto start = std::chrono::system_clock::now();
-        for(int i=2; i<depth; i++)
-            evaluate(-1000000, 1000000, i, side);    
-        std::cout<<"evaluation: "<<evaluate(-1000000, 1000000, depth, side)<<std::endl;
+        time_limit = std::chrono::system_clock::to_time_t(start)+allowed_time;
+
+        int cur_eval=0;
+        int level_finished=0;
+        for(int i=2; i<=depth; i++){
+            try{
+                cur_eval=evaluate(-1000000, 1000000, i, side);
+                level_finished=i; 
+            }
+            catch(char const* tle){
+                std::cout<<"Interupted depth: "<<i<<std::endl;
+                break;
+            }   
+        }
+
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
@@ -81,7 +99,7 @@ int main()
         turn++;
         printState();
         printChosenMove();
-
+        std::cout<<"depth: "<<level_finished<<std::endl;
         int xx, yy, id, mt;
 
         while(true){

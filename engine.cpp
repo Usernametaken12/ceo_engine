@@ -5,6 +5,8 @@
 
 #include <bits/stdc++.h>
 
+long double time_limit=0;
+
 int predictPVT(int pc, int x, int y, int xx, int yy){
     return piece_square_tables[piece_type[pc/2]][pc&1 ? yy : 7-yy][xx] - piece_square_tables[piece_type[pc/2]][pc&1 ? y : 7-y][x];
 }
@@ -280,6 +282,11 @@ const int null_move_reduction = 2;
 
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
+    if(mdepth>=3){
+        if(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())>time_limit)
+            throw "Exceeded time limit";
+    }
+
     ++nodes;
     long long hashl=hash;
     if (morale[0] <= 0)
@@ -337,10 +344,17 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         makeMove(nodeMove[tail][0], nodeMove[tail][1], id_board[nodeMove[tail][2]][nodeMove[tail][3]], nodeMove[tail][4]);
         endOfTurnTriggers(side);    
         ++turn;
-        if(side)
-            eval = evaluate(alpha, beta, mdepth-1, side^1);
-        else
-            eval = evaluate(alpha, beta, mdepth-1, side^1);
+        try{
+            if(side)
+                eval = evaluate(alpha, beta, mdepth-1, side^1);
+            else
+                eval = evaluate(alpha, beta, mdepth-1, side^1);
+        }
+        catch(...){
+            --turn; 
+            unmakeMoves(turn);
+            throw;
+        }
         
         --turn;
         unmakeMoves(turn);
@@ -394,17 +408,23 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         endOfTurnTriggers(side);    
 
         ++turn;
-        if(side){
-            res = evaluate(alpha, std::min(best, beta), mdepth-1-(j>2&&depth>2 ? 1 : 0), side^1);
-            if(j>2&&depth>2&&res<best)
-                res = evaluate(alpha, std::min(best, beta), mdepth-1, side^1);
+        try{
+            if(side){
+                res = evaluate(alpha, std::min(best, beta), mdepth-1-(j>2&&depth>2 ? 1 : 0), side^1);
+                if(j>2&&depth>2&&res<best)
+                    res = evaluate(alpha, std::min(best, beta), mdepth-1, side^1);
+            }
+            else{
+                res = evaluate(std::max(alpha, best), beta, mdepth-1-(j>2&&depth>2 ? 1 : 0), side^1);
+                if(j>2&&depth>2&&res>best)
+                    res = evaluate(std::max(alpha, best), beta, mdepth-1, side^1);
+            }
         }
-        else{
-            res = evaluate(std::max(alpha, best), beta, mdepth-1-(j>2&&depth>2 ? 1 : 0), side^1);
-            if(j>2&&depth>2&&res>best)
-                res = evaluate(std::max(alpha, best), beta, mdepth-1, side^1);
+        catch(...){
+            --turn;
+            unmakeMoves(turn);
+            throw;
         }
-        
         --turn;
         if(DEBUG){
             std::cout<<"}"<<std::endl;
