@@ -3390,12 +3390,14 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
                 for(int dy=std::max(-1, -1*yy); dy<=std::min(1, 7-yy); dy++)
                     if(((board[xx+dx][yy+dy]&1)^(capturedPiece&1))==0 && isChampion[board[xx+dx][yy+dy]/2])
                         inflictStatus(32, xx+dx, yy+dy, id_board[xx+dx][yy+dy]);
+            break;
         }
+        
         case 330: //frostmphit
         case 332:
         case 334:
         case 336:
-            if(killType==0)
+            if(killType==0&&!death[pc_id])
                 inflictStatus(11, px[pc_id], py[pc_id], pc_id);
             break;
         case 338: //giantslime
