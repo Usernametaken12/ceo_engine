@@ -69,7 +69,7 @@ int main()
 
         int cur_eval=0;
         int level_finished=0;
-        for(int i=2; i<=depth; i++){
+        for(int i=0; i<=depth; i++){
             try{
                 cur_eval=evaluate(-1000000, 1000000, i, side);
                 level_finished=i; 

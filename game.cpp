@@ -232,7 +232,30 @@ void addCandidateMove(int x, int y, int xx, int yy, int piece, int pc_id, int mo
         else if(!displacement_immune[board[xx][yy]/2])
             addMove(xx, yy, pc_id, 3);
         break;
-    case 38: // NA
+    case 38: // unblockable wind
+        if (board[xx][yy] != 0 && !displacement_immune[board[xx][yy]/2])
+            {
+                int dx = xx - x;
+                int dy = yy - y;
+                dx = dx < 0 ? -1 : dx > 0 ? 1
+                                        : 0;
+                dy = dy < 0 ? -1 : dy > 0 ? 1
+                                        : 0;
+                for(int i=1; i<=3; i++){
+                    if(xx+dx*i<0 || xx+dx*i>7 || yy+dy*i<0 || yy+dy*i>7)
+                        break;
+                    if(board[xx+dx*i][yy+dy*i]==0){
+                        addMove(xx, yy, pc_id, 13);
+                        break;
+                    }
+                    else{
+                        if(transparent[id_board[xx+dx*i][yy+dy*i]])
+                            continue;
+                        else
+                            break;
+                    }
+                }
+            }
         break;
     case 39: // augmented teleport (not implemented)
         break;
@@ -1380,26 +1403,26 @@ void generateMoves(int pc_id, int x, int y)
         break;
     case 234: // windmage
         queen(1, 3, piece, pc_id, x, y);
-        queen(2, 6, piece, pc_id, x, y, 2);
+        queen(2, 38, piece, pc_id, x, y, 2);
         knight(9, piece, pc_id, x, y);
         break;
     case 236:
         knight(9, piece, pc_id, x, y);
         rook(1, 13, piece, pc_id, x, y);
         bishop(1, 3, piece, pc_id, x, y);
-        rook(3, 6, piece, pc_id, x, y, 2);
-        bishop(2, 6, piece, pc_id, x, y, 2);
+        rook(3, 38, piece, pc_id, x, y, 2);
+        bishop(2, 38, piece, pc_id, x, y, 2);
         break;
     case 238:
         queen(1, 13, piece, pc_id, x, y);
-        queen(3, 6, piece, pc_id, x, y, 2);
+        queen(3, 38, piece, pc_id, x, y, 2);
         knight(9, piece, pc_id, x, y);
         break;
     case 240:
         queen(1, 13, piece, pc_id, x, y);
         knight(10, piece, pc_id, x, y);
-        rook(4, 6, piece, pc_id, x, y, 2);
-        bishop(3, 6, piece, pc_id, x, y, 2);
+        rook(4, 38, piece, pc_id, x, y, 2);
+        bishop(3, 38, piece, pc_id, x, y, 2);
         break;
     case 242: // Alchemist
         queen(2, 16, piece, pc_id, x, y, 2);
@@ -3163,6 +3186,13 @@ void removePVT(int pc, int x, int y){
     position_bonus[pc&1]-=piece_square_tables[piece_type[pc/2]][pc&1 ? y : 7-y][x];
 }
 
+void addPoisonPenalty(int pc){
+    position_bonus[pc&1]-=(pieceValue[pc/2]*75);
+}
+
+void removePoisonPenalty(int pc){
+    position_bonus[pc&1]-=(pieceValue[pc/2]*75);
+}
 
 /*
 56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28
@@ -3409,9 +3439,9 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
                 break;
             int ydir = -1+2*(capturedPiece&1);
             if(xx>=1&&yy+ydir>=0&&yy+ydir<=7&&board[xx-1][yy+ydir]==0)
-                summonPiece(xx-1, yy+ydir, 186+(takingPiece&1));
+                summonPiece(xx-1, yy+ydir, 186+(capturedPiece&1));
             if(xx<=6&&yy+ydir>=0&&yy+ydir<=7&&board[xx+1][yy+ydir]==0)
-                summonPiece(xx+1, yy+ydir, 186+(takingPiece&1));
+                summonPiece(xx+1, yy+ydir, 186+(capturedPiece&1));
             break;
         }
         case 354: //hostage
@@ -3627,6 +3657,7 @@ void inflictStatus(int nstatus, int xx, int yy, int pc_id){
         return killPiece(xx, yy, pc_id, 1);
     if((status[id_board[xx][yy]]&(1LL<<nstatus))>0LL)
         return;
+        
     hash^=zstatus(id_board[xx][yy]);
     status[id_board[xx][yy]]|=(1LL<<nstatus);
     hash^=zstatus(id_board[xx][yy]);
@@ -3650,14 +3681,15 @@ void pushPiece(int x, int y, int xx, int yy, int pc_id, int dis=3){
     int lvy=yy;
     for(int i=1; i<=dis; i++){
         if(0>xx+xdif*i || xx+xdif*i>7 || yy+ydif*i<0 || yy+ydif*i>7)
-            continue;
+            break;
         if(board[xx+xdif*i][yy+ydif*i]==0){
             lvx=xx+xdif*i;
             lvy=yy+ydif*i;
         }
         else if(board[xx+xdif*i][yy+ydif*i] && transparent[id_board[xx][yy]])
             continue;
-        break;
+        else
+            break;
     }
     if(lvx!=xx||lvy!=yy)
         moveToSquare(xx, yy, lvx, lvy, id_board[xx][yy], false);

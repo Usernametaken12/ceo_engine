@@ -2,9 +2,9 @@
 
 all: comp
 #debug
-#CXX = g++ -fsanitize=undefined -g 
+CXX = g++ -fsanitize=undefined -g 
 
-CXX = g++ -Ofast
+#CXX = g++ -Ofast
 
 objects = const_global.o engine.o game.o utils.o main.o
 headers = const_global.h engine.h game.h utils.h
