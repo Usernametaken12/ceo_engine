@@ -7,8 +7,8 @@
 void printState();
 
 long long zstatus(int pc_id){
-    if(DEBUG)
-        std::cout<<"STATUS HASH: "<<((status[pc_id])%status_prime)*zstatus_id[pc_id]<<"Piece: "<<pc_id<<" STATUS VALUE: "<<status[pc_id]<<std::endl;
+    /*if(DEBUG)
+        std::cout<<"STATUS HASH: "<<((status[pc_id])%status_prime)*zstatus_id[pc_id]<<"Piece: "<<pc_id<<" STATUS VALUE: "<<status[pc_id]<<std::endl;*/
     return ((status[pc_id])%status_prime)*zstatus_id[pc_id];
 }
 
@@ -3186,13 +3186,26 @@ void removePVT(int pc, int x, int y){
     position_bonus[pc&1]-=piece_square_tables[piece_type[pc/2]][pc&1 ? y : 7-y][x];
 }
 
-void addPoisonPenalty(int pc){
-    position_bonus[pc&1]-=(pieceValue[pc/2]*75);
+void addStatusPenalty(int pc_id){
+    if(status[pc_id]==0)
+        return;
+    int pc=pieces[pc_id];
+    if(isPoisoned(pc_id))
+        position_bonus[pc&1]-=((1+pieceValue[pc/2])*75);
+    if(isPetrified(pc_id)||isFrozen(pc_id))
+        position_bonus[pc&1]-=((1+pieceValue[pc/2])*20);   
 }
 
-void removePoisonPenalty(int pc){
-    position_bonus[pc&1]-=(pieceValue[pc/2]*75);
+void removeStatusPenalty(int pc_id){
+    if(status[pc_id]==0)
+        return;
+    int pc=pieces[pc_id];
+    if(isPoisoned(pc_id))
+        position_bonus[pc&1]+=((1+pieceValue[pc/2])*75);
+    if(isPetrified(pc_id)||isFrozen(pc_id))
+        position_bonus[pc&1]+=((1+pieceValue[pc/2])*20);   
 }
+
 
 /*
 56,Gustavus_Adolph#4253,Guhbuh#8296,3000,4500,v56_replay,7,6,4,1,1,1,0,152,46,36,31,31,5,0,White,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,Lust4,Spider,,,,,Drake,Gemini3,FireMage,Samurai,,,,,Drake,Alchemist3,Phalanx4,Samurai,,,,,Pikeman3,Fencer2,EarthElemental4,Samurai,,,,,Mercenary,NullMage3,EarthElemental4,Samurai,,,,,Mercenary,Ranger4,King,Samurai,,,,,Pikeman3,Fencer2,ThunderMage4,Samurai,,,,,Bomber,Lich4,Lust4,Spider,,,,,Bomber,King,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,52,45,1,18,48,34,8,26,34,33,11,20,60,52,7,22,52,44,26,17,49,35,18,42,35,34,18,8,45,38,22,21,34,52,9,16,51,43,15,29,30,38,29,36,33,41,36,44,57,51,2,11,44,36,20,29,36,44,29,38,54,46,0,9,56,57,13,22,53,45,11,18,51,34,18,19,34,16,9,18,34,40,18,9,52,34,14,23,50,42,4,13,40,50,13,37,43,36,8,18,26,40,18,42,34,35,6,5,42,34,5,45,36,37,21,11,28,12,11,12,20,12,3,35,45,53,18,26,44,35,19,20,35,42,9,19,53,45,17,35,58,51,18,28,50,44,28,34,42,43,23,30,59,43,30,37,45,37,19,28,44,61,28,36,36,28,20,28,62,45,5,21,51,44,28,27,62,54,35,43,61,51,35,49,43,44,27,20,43,36,34,28,36,28,21,28,57,49,28,35,44,46,35,28,40,26,28,19,26,10,3,10,59,52,20,28
@@ -3581,6 +3594,8 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     undo_pnt[turn]++;
 
     removePVT(capturedPiece, xx, yy);
+    removeStatusPenalty(id_board[xx][yy]);
+
     hash^=zmorale[capturedPiece&1][morale[capturedPiece&1]+50];
     hash^=zboard[xx][yy][capturedPiece];
     hash^=zstatus(id_board[xx][yy]);
@@ -3657,10 +3672,12 @@ void inflictStatus(int nstatus, int xx, int yy, int pc_id){
         return killPiece(xx, yy, pc_id, 1);
     if((status[id_board[xx][yy]]&(1LL<<nstatus))>0LL)
         return;
-        
+
+    removeStatusPenalty(id_board[xx][yy]);
     hash^=zstatus(id_board[xx][yy]);
     status[id_board[xx][yy]]|=(1LL<<nstatus);
     hash^=zstatus(id_board[xx][yy]);
+    addStatusPenalty(id_board[xx][yy]);
 
     undostack[turn][undo_pnt[turn]][0]=3;
     undostack[turn][undo_pnt[turn]][1]=id_board[xx][yy];
@@ -3804,6 +3821,7 @@ void replacePiece(int xx, int yy, int pc_id, int nPieceType){
     undostack[turn][undo_pnt[turn]][3]=pmorale[pc_id];
     undo_pnt[turn]++;
 
+    removeStatusPenalty(pc_id);
     removePVT(board[xx][yy], xx, yy);
     addPVT(nPieceType, xx, yy);
 
@@ -3822,6 +3840,7 @@ void replacePiece(int xx, int yy, int pc_id, int nPieceType){
     pieces[pc_id]=nPieceType;
 
     hash^=zboard[xx][yy][board[xx][yy]];
+    addStatusPenalty(pc_id);
 
     if(nPieceType>=106 && nPieceType<114)
         transparent[pc_id]=1;
@@ -3849,11 +3868,13 @@ void cureUnit(int xx, int yy, int pc_id){
     undo_pnt[turn]++;
 
     hash^=zstatus(pc_id);
+    removeStatusPenalty(pc_id);
 
     status[pc_id]>>=32;
     status[pc_id]<<=32; 
 
     hash^=zstatus(pc_id);
+    addStatusPenalty(pc_id);
 }
 
 void nullPiece(int xx, int yy, int pc_id){
@@ -4065,7 +4086,7 @@ void unmakeMoves(int tur){
         int i = undo_pnt[tur]-1;
         int mT= undostack[tur][i][0];
         switch(mT){
-            case 0: 
+            case 0: //move
             {
                 int x=undostack[tur][i][1];
                 int y=undostack[tur][i][2];
@@ -4094,13 +4115,12 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 1:
+            case 1: //kill
             {
                 int xx = undostack[tur][i][1];
                 int yy = undostack[tur][i][2];
                 int pc_id = undostack[tur][i][3];
 
-                addPVT(pieces[pc_id], xx, yy);
 
                 hash^=zmorale[pieces[pc_id]&1][morale[pieces[pc_id]&1]+50];
                 hash^=zboard[xx][yy][pieces[pc_id]];
@@ -4113,10 +4133,14 @@ void unmakeMoves(int tur){
 
                 death[pc_id]=0;
                 id_board[xx][yy]=pc_id;
+
+                addStatusPenalty(pc_id);
+                addPVT(pieces[pc_id], xx, yy);
+
                 break;
             }
 
-            case 2:
+            case 2: //swap
             {
                 int x = undostack[tur][i][1];
                 int y = undostack[tur][i][2];
@@ -4146,16 +4170,22 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 3:
+            case 3: //inflict status
             {
                 int pc_id = undostack[tur][i][1];
+
+                removeStatusPenalty(pc_id);
+
                 hash^=zstatus(pc_id);
                 status[pc_id]-= (1L<<undostack[tur][i][2]);
                 hash^=zstatus(pc_id);
+
+                addStatusPenalty(pc_id);
+
                 break;
             }
 
-            case 4:
+            case 4: //summon
             {
                 pc_cnt--;
                 removePVT(pieces[pc_cnt], px[pc_cnt], py[pc_cnt]);
@@ -4177,7 +4207,7 @@ void unmakeMoves(int tur){
                 break;
             }
             
-            case 5:
+            case 5: //mark
             {
                 int mark = undostack[tur][i][1];
                 int xx = undostack[tur][i][2];
@@ -4199,7 +4229,7 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 6:
+            case 6: //pay morale
             {
                 int side= undostack[tur][i][1];
 
@@ -4209,7 +4239,7 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 7:
+            case 7: //replace piece
             {
                 int pc_id = undostack[tur][i][1];
                 int pc = undostack[tur][i][2];
@@ -4219,6 +4249,7 @@ void unmakeMoves(int tur){
                 pc&=2047;
 
                 removePVT(pieces[pc_id], px[pc_id], py[pc_id]);
+                removeStatusPenalty(pc_id);
 
                 hash^=zmorale[0][morale[0]+50];
                 hash^=zmorale[1][morale[1]+50];            
@@ -4237,11 +4268,12 @@ void unmakeMoves(int tur){
                 hash^=zboard[px[pc_id]][py[pc_id]][board[px[pc_id]][py[pc_id]]];
 
                 addPVT(pc, px[pc_id], py[pc_id]);
+                addStatusPenalty(pc_id);
 
                 break;            
             }
 
-            case 8:
+            case 8: //increase value
             {
                 int pc_id = undostack[tur][i][1];
                 int oval = undostack[tur][i][2];
@@ -4257,9 +4289,10 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 9:
+            case 9: //cure
             {
                 int pc_id = undostack[tur][i][1];
+                removeStatusPenalty(pc_id);
 
                 hash^=zstatus(pc_id);
 
@@ -4267,11 +4300,12 @@ void unmakeMoves(int tur){
                 status[pc_id]=ostatus;
 
                 hash^=zstatus(pc_id);
+                addStatusPenalty(pc_id);
 
                 break;
             }
 
-            case 10:
+            case 10: //prince
             {
                 int side = undostack[tur][i][1];
                 int oID = undostack[tur][i][2];
@@ -4279,7 +4313,7 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 11:
+            case 11: //resolve meteor
             {
                 int x = undostack[tur][i][1]=x;
                 int y = undostack[tur][i][2]=y;
@@ -4302,7 +4336,7 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 12:
+            case 12: //null piece
             {
                 int pc_id = undostack[tur][i][1];
                 bool trans = (undostack[tur][i][2]&2048);
@@ -4324,7 +4358,7 @@ void unmakeMoves(int tur){
                 break;
             }
 
-            case 13:
+            case 13: //unenchant
             {
                 int pc_id = undostack[tur][i][1];
 
@@ -4351,17 +4385,24 @@ void processStatus(int pc_id, int side){
 
     hash^=zstatus(pc_id);
 
+    removeStatusPenalty(pc_id);
+
     status[pc_id]<<=1;
+    
+
 
     //poison
     if(status[pc_id]&(1<<6)){
+        addStatusPenalty(pc_id);
         hash^=zstatus(pc_id);
         killPiece(px[pc_id], py[pc_id], -1, 1);
         return;
     }
 
     status[pc_id]&=(1LL<<37) - 1 - (1LL<<31) - (1LL<<20) - (1LL<<13) - (1LL<<6);
+    
     hash^=zstatus(pc_id);
+    addStatusPenalty(pc_id);
 
 
     //compel

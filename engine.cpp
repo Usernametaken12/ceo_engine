@@ -289,6 +289,7 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
     ++nodes;
     long long hashl=hash;
+    int evall=static_evaluation(side);
     if (morale[0] <= 0)
         return morale[1] <= 0 ? 0 : -1000000;
     if (morale[1] <= 0)
@@ -358,7 +359,8 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         
         --turn;
         unmakeMoves(turn);
-
+        if(static_evaluation(side)!=evall)
+            throw std::logic_error("unmake failed");
         if(side==0){
             if(eval>=beta)
                 return eval;
@@ -431,9 +433,12 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             std::cout<<"UNMAKE"<<std::endl;
         }
         unmakeMoves(turn);
-
+            
         if(DEBUG)
-            printState();    
+            printState();  
+          
+        if(static_evaluation(side)!=evall)
+            throw std::logic_error("unmake failed");
 
         if(hash!=hashl){
             printState();
