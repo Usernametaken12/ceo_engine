@@ -2,30 +2,30 @@
 
 all: comp
 #debug
-#CXX = g++ -fsanitize=undefined -g 
+CXX = g++ -fsanitize=undefined -g 
 
-CXX = g++ -Ofast
+#CXX = g++ -Ofast
 
-objects = const_global.o engine.o game.o utils.o main.o
-headers = const_global.h engine.h game.h utils.h
+objects = src/const_global.o src/engine.o src/game.o src/utils.o src/main.o
+headers = src/const_global.h src/engine.h src/game.h src/utils.h
 
 comp: $(objects)
 	$(CXX) -o comp $(objects) 
 
-const_global.o: const_global.cpp const_global.h 
-	$(CXX) -c const_global.cpp
+const_global.o: src/const_global.cpp src/const_global.h 
+	$(CXX) -c src/const_global.cpp
 
-engine.o: engine.cpp $(headers)
-	$(CXX) -c engine.cpp
+engine.o: src/engine.cpp $(headers)
+	$(CXX) -c src/engine.cpp
 
-game.o: game.cpp const_global.h
-	$(CXX) -c game.cpp
+game.o: src/game.cpp src/const_global.h
+	$(CXX) -c src/game.cpp
 
-utils.o: utils.cpp const_global.h engine.h utils.h
-	$(CXX) -c utils.cpp
+utils.o: src/utils.cpp src/const_global.h src/engine.h src/utils.h
+	$(CXX) -c src/utils.cpp
 
-main.o: main.cpp $(headers)
-	$(CXX) -c main.cpp
+main.o: src/main.cpp $(headers)
+	$(CXX) -c src/main.cpp
 
 clean:
 	rm *.o comp

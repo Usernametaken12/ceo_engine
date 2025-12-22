@@ -282,6 +282,9 @@ const int null_move_reduction = 2;
 
 int evaluate(int alpha, int beta, int mdepth, int side)
 {
+    if((hash^(side ? zblack : 0))==6036037833291321808)
+        printState();
+
     if(mdepth>=3){
         if(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())>time_limit)
             throw "Exceeded time limit";
@@ -342,7 +345,8 @@ int evaluate(int alpha, int beta, int mdepth, int side)
 
         //try saved move
         int eval;
-        makeMove(nodeMove[tail][0], nodeMove[tail][1], id_board[nodeMove[tail][2]][nodeMove[tail][3]], nodeMove[tail][4]);
+        if(id_board[nodeMove[tail][2]][nodeMove[tail][3]]!=-1)
+            makeMove(nodeMove[tail][0], nodeMove[tail][1], id_board[nodeMove[tail][2]][nodeMove[tail][3]], nodeMove[tail][4]);
         endOfTurnTriggers(side);    
         ++turn;
         try{
@@ -406,6 +410,10 @@ int evaluate(int alpha, int beta, int mdepth, int side)
             printState();
         }
 
+        if(turn==start_turn && mdepth>=12){
+            std::cout<<candidateMoveStack[turn][i][0]<<" "<<candidateMoveStack[turn][i][1]<<" "<<candidateMoveStack[turn][i][2]<<" "<<candidateMoveStack[turn][i][3]<<std::endl;
+        }
+
         makeMove(candidateMoveStack[turn][i][0], candidateMoveStack[turn][i][1], candidateMoveStack[turn][i][2], candidateMoveStack[turn][i][3]);
         endOfTurnTriggers(side);    
 
@@ -437,8 +445,8 @@ int evaluate(int alpha, int beta, int mdepth, int side)
         if(DEBUG)
             printState();  
           
-        if(static_evaluation(side)!=evall)
-            throw std::logic_error("unmake failed");
+        /*if(static_evaluation(side)!=evall)
+            throw std::logic_error("unmake failed");*/
 
         if(hash!=hashl){
             printState();

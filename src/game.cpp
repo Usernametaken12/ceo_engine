@@ -3287,6 +3287,7 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
     int takingPiece= pc_id==-1 ? 0 : pieces[pc_id];
     int capturedPiece=board[xx][yy];
     if(takingPiece!=0&&((takingPiece^capturedPiece)&1)==0){
+        printState();
         throw std::logic_error("captured own piece??");
     }
     switch(takingPiece&(2048-2)){
@@ -3451,9 +3452,10 @@ void killPiece(int xx, int yy, int pc_id, int killType=0){
             if(killType!=0)
                 break;
             int ydir = -1+2*(capturedPiece&1);
-            if(xx>=1&&yy+ydir>=0&&yy+ydir<=7&&board[xx-1][yy+ydir]==0)
+
+            if(xx>=1 && yy+ydir>=0 && yy+ydir<=7 && board[xx-1][yy+ydir]==0)
                 summonPiece(xx-1, yy+ydir, 186+(capturedPiece&1));
-            if(xx<=6&&yy+ydir>=0&&yy+ydir<=7&&board[xx+1][yy+ydir]==0)
+            if(xx<=6 && yy+ydir>=0 && yy+ydir<=7 && board[xx+1][yy+ydir]==0)
                 summonPiece(xx+1, yy+ydir, 186+(capturedPiece&1));
             break;
         }
