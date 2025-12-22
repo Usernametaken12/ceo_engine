@@ -6,26 +6,26 @@ CXX = g++ -fsanitize=undefined -g
 
 #CXX = g++ -Ofast
 
-objects = src/const_global.o src/engine.o src/game.o src/utils.o src/main.o
-headers = src/const_global.h src/engine.h src/game.h src/utils.h
+objects = src/engine/const_global.o src/engine/engine.o src/engine/game.o src/engine/utils.o src/engine/main.o
+headers = src/engine/const_global.h src/engine/engine.h src/engine/game.h src/engine/utils.h
 
 comp: $(objects)
 	$(CXX) -o comp $(objects) 
 
-const_global.o: src/const_global.cpp src/const_global.h 
-	$(CXX) -c src/const_global.cpp
+const_global.o: src/engine/const_global.cpp src/engine/const_global.h 
+	$(CXX) -c src/engine/const_global.cpp
 
-engine.o: src/engine.cpp $(headers)
-	$(CXX) -c src/engine.cpp
+engine.o: src/engine/engine.cpp $(headers)
+	$(CXX) -c src/engine/engine.cpp
 
-game.o: src/game.cpp src/const_global.h
-	$(CXX) -c src/game.cpp
+game.o: src/engine/game.cpp src/engine/const_global.h
+	$(CXX) -c src/engine/game.cpp
 
-utils.o: src/utils.cpp src/const_global.h src/engine.h src/utils.h
-	$(CXX) -c src/utils.cpp
+utils.o: src/engine/utils.cpp src/engine/const_global.h src/engine/engine.h src/engine/utils.h
+	$(CXX) -c src/engine/utils.cpp
 
-main.o: src/main.cpp $(headers)
-	$(CXX) -c src/main.cpp
+main.o: src/engine/main.cpp $(headers)
+	$(CXX) -c src/engine/main.cpp
 
 clean:
 	rm *.o comp
